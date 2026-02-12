@@ -1,7 +1,25 @@
 import numpy as np
 import pandas as pd 
-from analysis_wrapper.plots import summary_plots
 from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
+
+
+
+def get_RPE_by_avg_signal_fit(data, avg_signal_col):
+
+
+    x = data['RPE_earned'].values
+    y = data[avg_signal_col].values
+    try:
+        lr = stats.linregress(x, y)
+        x_fit = np.linspace(x.min(), x.max(), 100)
+        y_fit = lr.intercept + lr.slope * x_fit
+        slope = lr.slope
+    except ValueError as e:
+        print(f"Error in linear regression: {e}")
+        x_fit = np.nan * np.arange(100)
+        y_fit = np.nan * np.arange(100)
+        slope = np.nan
+    return (x_fit, y_fit, slope)
 
 
 def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm', 
@@ -39,8 +57,8 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
             data_pos = data[data['RPE_earned'] >= 0]
 
             ses_date = pd.to_datetime(ses_idx.split('_')[1])
-            (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
-            (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+            (_,_, slope_pos) = get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
+            (_,_, slope_neg) = get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
             rpe_slope.append([ses_date, slope_pos, slope_neg])
         rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
         rpe_slope_dict[channel] = rpe_slope

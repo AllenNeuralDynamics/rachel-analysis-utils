@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd 
 from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
+import scipy.stats as stats
 
 
 

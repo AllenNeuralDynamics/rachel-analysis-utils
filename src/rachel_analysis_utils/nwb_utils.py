@@ -9,7 +9,14 @@ from aind_dynamic_foraging_data_utils import nwb_utils, enrich_dfs
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 
 
+import copy 
 
+def split_nwb(nwb):
+    nwb_split = copy.deepcopy(nwb)
+    nwb_split.df_trials_left = nwb.df_trials.query('choice == 0.0')
+    nwb_split.df_trials_right = nwb.df_trials.query('choice == 1.0')
+    nwb_split.df_trials_ignore = nwb.df_trials.query('choice == 2.0')
+    return nwb_split
 
 
 class dummy_nwb:

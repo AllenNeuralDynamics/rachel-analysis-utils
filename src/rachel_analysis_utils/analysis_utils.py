@@ -1,5 +1,6 @@
 import numpy as np
-import pandas as pd 
+import pandas as pd
+import copy 
 from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
 import scipy.stats as stats
 
@@ -28,22 +29,24 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
                             alignment_event = 'choice_time_in_session',offsets = [0.33,1]):
     rpe_slope_dict = {}
     nwbs_by_week_enriched = []
-    for channel in list(parameters["channels"].keys()):
-        if parameters['preprocessing'] is not 'raw':
-            channel = channel +  '_' + parameters['preprocessing'] 
+    for nwb_week in nwbs_by_week:
+        nwb_week_enriched = copy.deepcopy(nwb_week)
+        for channel in list(parameters["channels"].keys()):
+            if parameters['preprocessing'] != 'raw':
+                channel = channel +  '_' + parameters['preprocessing'] 
 
-        avg_signal_col = output_col_name(channel, data_column, alignment_event)
-        for nwb_week in nwbs_by_week:
+            avg_signal_col = output_col_name(channel, data_column, alignment_event)
+        
         
             nwb_week_enriched = trial_metrics.get_average_signal_window_multi(
-                            nwb_week,
+                            nwb_week_enriched,
                             alignment_event=alignment_event,
                             offsets=offsets,
                             channel=channel,
                             data_column=data_column,
                             output_col = avg_signal_col
                         )
-            nwbs_by_week_enriched.append(nwb_week_enriched)
+        nwbs_by_week_enriched.append(nwb_week_enriched)
         
         # get rpe slope per session 
 

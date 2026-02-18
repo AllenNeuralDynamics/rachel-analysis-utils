@@ -181,7 +181,7 @@ def attach_dfs(nwb_file):
 
 def get_nwb_processed(file_locations, **parameters) -> None:
     interested_channels = list(parameters["channels"].keys())
-    if parameters['preprocessing'] is not "raw":
+    if parameters['preprocessing'] != "raw":
         interested_channels = [channel + '_' + parameters['preprocessing'] for channel in interested_channels]
     df_sess = nwb_utils.create_df_session(file_locations)
     df_sess['s3_location'] = file_locations

@@ -20,7 +20,7 @@ def split_nwb_by_choice(nwb):
     return nwb_split
 
 def split_nwb_by_time(nwb):
-    num_trials = np.max(nwbs_by_week[0][0].df_trials['trial'])
+    num_trials = np.max(nwb.df_trials['trial'])
     mid_point = int(num_trials/2)
     nwb_split_early, nwb_split_late = copy.deepcopy(nwb), copy.deepcopy(nwb)
     nwb_split_early.df_trials = nwb.df_trials.query(f'trial < {mid_point}')

@@ -10,7 +10,23 @@ from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 
 
 
+import copy 
 
+def split_nwb_by_choice(nwb):
+    nwb_split = copy.deepcopy(nwb)
+    nwb_split.df_trials_left = nwb.df_trials.query('choice == 0.0')
+    nwb_split.df_trials_right = nwb.df_trials.query('choice == 1.0')
+    nwb_split.df_trials_ignore = nwb.df_trials.query('choice == 2.0')
+    return nwb_split
+
+def split_nwb_by_time(nwb):
+    num_trials = np.max(nwbs_by_week[0][0].df_trials['trial'])
+    mid_point = int(num_trials/2)
+    nwb_split_early, nwb_split_late = copy.deepcopy(nwb), copy.deepcopy(nwb)
+    nwb_split_early.df_trials = nwb.df_trials.query(f'trial < {mid_point}')
+    nwb_split_late.df_trials = nwb.df_trials.query(f'trial >= {mid_point}')
+
+    return (nwb_split_early, nwb_split_late)
 
 class dummy_nwb:
     def __init__(self, df_trials, df_events, df_fip, ses_idx = None, df_licks = None, grouped = False) -> None:

@@ -12,6 +12,53 @@ from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 
 import copy 
 
+def pick_side(side_pos, seg_bounds, per_seg_min):
+    side_by_seg = []
+    for lo, hi in seg_bounds:
+        side_in = side_pos[(side_pos >= lo) & (side_pos < hi)]
+        side_in_subset = np.random.choice(side_in, size = per_seg_min, replace = False)
+        side_by_seg.append(np.sort(side_in_subset))
+    all_selected = np.sort(np.concatenate([arr for arr in side_by_seg if arr.size]))
+    return all_selected, side_by_seg
+    
+def subsample_lr_thirds(nwb, per_seg_min = 50):
+    nwb_subset = copy.deepcopy(nwb)
+    df_trials = nwb.df_trials
+    n = len(df_trials)
+    
+    # thirds boundaries (integer division)
+    t1 = n // 3
+    t2 = 2 * n // 3
+
+    positions = np.arange(n)
+
+    left_mask = df_trials['choice'].to_numpy() == 0
+    right_mask = df_trials['choice'].to_numpy() == 1
+
+    left_pos = positions[left_mask]
+    right_pos = positions[right_mask]
+
+    # compute per-third minimums
+    seg_bounds = [(0, t1), (t1, t2), (t2, n)]
+    for lo, hi in seg_bounds:
+        left_in = left_pos[(left_pos >= lo) & (left_pos < hi)]
+        right_in = right_pos[(right_pos >= lo) & (right_pos < hi)]
+        per_seg_min = int(min(int(min(left_in.size, right_in.size)), per_seg_min))
+
+    left_idx, left_by_seg = pick_side(left_pos, seg_bounds, per_seg_min)
+    right_idx, right_by_seg = pick_side(right_pos, seg_bounds, per_seg_min)
+
+    # ensure equal totals (they should be by construction)
+    keep = min(left_idx.size, right_idx.size)
+    left_idx = left_idx[:keep]
+    right_idx = right_idx[:keep]
+
+    sel_idx = np.sort(np.concatenate([left_idx, right_idx]))
+    df_sub = df_trials.loc[sel_idx].copy().reset_index(drop=True)
+
+    nwb_subset.df_trials = df_sub
+    return nwb_subset
+
 def split_nwb_by_choice(nwb):
     nwb_split = copy.deepcopy(nwb)
     nwb_split.df_trials_left = nwb.df_trials.query('choice == 0.0')

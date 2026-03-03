@@ -30,7 +30,7 @@ def subsample_lr_thirds(nwb, per_seg_min = 50):
     t1 = n // 3
     t2 = 2 * n // 3
 
-    positions = np.arange(n)
+    positions = df_trials['trial'].values
 
     left_mask = df_trials['choice'].to_numpy() == 0
     right_mask = df_trials['choice'].to_numpy() == 1
@@ -54,7 +54,7 @@ def subsample_lr_thirds(nwb, per_seg_min = 50):
     right_idx = right_idx[:keep]
 
     sel_idx = np.sort(np.concatenate([left_idx, right_idx]))
-    df_sub = df_trials.loc[sel_idx].copy().reset_index(drop=True)
+    df_sub = df_trials[df_trials['trial'].isin(sel_idx)].copy()
 
     nwb_subset.df_trials = df_sub
     return nwb_subset

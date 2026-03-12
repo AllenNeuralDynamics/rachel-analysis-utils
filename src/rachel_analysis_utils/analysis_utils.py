@@ -73,7 +73,8 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
     combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
     combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
 
-    combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
+    if parameters["save_dfs"] == True:  
+        combined_rpe_slope.to_csv(f"/results/data/{subject_id}/rpe_slope.csv")
 
     return nwbs_by_week_enriched, combined_rpe_slope
 

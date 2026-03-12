@@ -4,6 +4,7 @@ import warnings
 import glob
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 from aind_dynamic_foraging_data_utils import nwb_utils, enrich_dfs
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
@@ -116,7 +117,133 @@ class dummy_nwb:
     def __repr__(self):
         return f"{self.session_id}"
 
-    
+    def save(self, plot_loc, df_sess = None):
+        """
+        Save dataframe attributes into:
+            plot_loc / session_id / <attr>.parquet
+        """
+
+        session_folder = Path(plot_loc) / str(self.session_id)
+        session_folder.mkdir(parents=True, exist_ok=True)
+
+        for attr, val in self.__dict__.items():
+            if isinstance(val, pd.DataFrame):
+                # print(f"now saving {attr}")
+
+                if attr == "df_events":
+                    val["data"] = val["data"].astype(str)
+                
+                # df = self.convert_df_to_saveable_format(val)
+                if attr == "df_trials":
+                    val["side_bias_confidence_interval_low"] = val["side_bias_confidence_interval"].apply(lambda x: x[0])
+                    val["side_bias_confidence_interval_high"] = val["side_bias_confidence_interval"].apply(lambda x: x[1])
+                    val = val.drop(columns=["side_bias_confidence_interval"])
+                val.to_parquet(session_folder / f"{attr}.parquet", index=False, engine="fastparquet")
+
+        return session_folder
+
+    @classmethod
+    def load(cls, session_folder):
+        """
+        Load object from a saved session folder.
+        """
+
+        session_folder = Path(session_folder)
+
+        obj = cls.__new__(cls)
+        obj.session_id = session_folder.name
+        obj.nwb_file_loc = None
+
+        for file in session_folder.glob("*.parquet"):
+            setattr(obj, file.stem, pd.read_parquet(file, engine="fastparquet"))
+
+        return obj
+
+def save_nwb_list(nwb_list, plot_loc, df_sess=None):
+    """
+    Save a list or list-of-lists of dummy_nwb objects.
+
+    Folder structure:
+        plot_loc/
+            <subject_id>/
+                df_sess.parquet (optional)
+                <session_id>/
+                    <attr>.parquet
+    """
+
+    # flatten list or list-of-lists
+    flat_dummy_nwbs = [
+        nwb
+        for item in nwb_list
+        for nwb in (item if isinstance(item, list) else [item])
+    ]
+
+    subject_ids = set()
+
+    for nwb in flat_dummy_nwbs:
+
+        subject_id = str(nwb.session_id).split("_")[0]
+        subject_ids.add(subject_id)
+
+        subject_folder = Path(plot_loc) / subject_id
+        subject_folder.mkdir(parents=True, exist_ok=True)
+
+        # call the class save method
+        print(f'now saving {nwb.session_id}')
+        nwb.save(subject_folder)
+
+    # save optional df_sess once per subject
+    if df_sess is not None:
+        print(f"now saving df_sess")
+
+        df_sess.to_csv(
+            Path(plot_loc) / "df_sess.csv"
+        )
+
+
+def load_nwb_list(plot_loc):
+    """
+    Load dummy_nwb objects from:
+
+        plot_loc/
+            df_sess.csv (optional)
+            <subject_id>/
+                <session_id>/
+                    df_events.parquet
+                    df_fip.parquet
+                    df_trials.parquet
+    """
+
+    plot_loc = Path(plot_loc)
+
+    nwbs = []
+    df_sess = None
+
+    # load df_sess if present
+    df_sess_file = plot_loc / "df_sess.csv"
+    if df_sess_file.exists():
+        print("loading df_sess")
+        df_sess = pd.read_csv(df_sess_file)
+    else:
+        df_sess = None
+
+    # load sessions
+    for subject_folder in sorted(plot_loc.iterdir()):
+
+        if not subject_folder.is_dir():
+            continue
+
+        for session_folder in sorted(subject_folder.iterdir()):
+
+            if not session_folder.is_dir():
+                continue
+
+            print(f"loading {session_folder.name}")
+
+            nwb = dummy_nwb.load(session_folder)
+            nwbs.append(nwb)
+
+    return nwbs, df_sess
 def get_dummy_nwbs(df_trials, df_events, df_fip):
     ses_idx_list = df_trials.ses_idx.unique()
     dummy_nwbs_list = []

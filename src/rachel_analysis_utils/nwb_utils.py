@@ -225,7 +225,17 @@ def load_nwb_list(plot_loc):
         print("loading df_sess")
         df_sess = pd.read_csv(df_sess_file)
     else:
+        print("no df_sess found at plot location, skipping")
         df_sess = None
+
+    # load df_slope if present
+    slope_files = glob.glob(f"{plot_loc}/**/rpe_slope.csv")
+    if slope_files:
+        print("loading df_slope")
+        df_slope = pd.concat([pd.read_csv(file) for file in slope_files], ignore_index=True)
+    else:
+        print("no rpe_slope.csv found at plot location, skipping")
+        df_slope = None
 
     # load sessions
     for subject_folder in sorted(plot_loc.iterdir()):
@@ -243,7 +253,8 @@ def load_nwb_list(plot_loc):
             nwb = dummy_nwb.load(session_folder)
             nwbs.append(nwb)
 
-    return nwbs, df_sess
+    return nwbs, df_sess, df_slope 
+    
 def get_dummy_nwbs(df_trials, df_events, df_fip):
     ses_idx_list = df_trials.ses_idx.unique()
     dummy_nwbs_list = []

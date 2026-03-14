@@ -254,7 +254,40 @@ def load_nwb_list(plot_loc):
             nwbs.append(nwb)
 
     return nwbs, df_sess, df_slope 
-    
+
+def add_slope_to_sess(df_sess, df_slope, slope_col_name, channel_name,
+                      session_date_col='session_date', channel_col='channel',
+                      new_col_name=None):
+    """
+    Add a slope column from df_slope into df_sess by matching session_date.
+    - df_sess: sessions dataframe
+    - df_slope: slopes dataframe (must contain channel_col and session_date_col)
+    - slope_col_name: name of the slope column in df_slope to pull (e.g. 'slope (RPE >= 0)')
+    - channel_name: channel string to filter df_slope by
+    - new_col_name: optional name for the added column in df_sess (defaults to slope_col_name)
+    Returns a new dataframe (does not modify inputs).
+    """
+    if new_col_name is None:
+        new_col_name = channel_name.split('dff')[0] + slope_col_name
+
+    df_slope = df_slope.rename(columns={'date': session_date_col})
+    # filter slope table to the requested channel and keep only date + slope column
+    slope_filtered = (df_slope
+                      .loc[df_slope[channel_col] == channel_name, [session_date_col, slope_col_name]]
+                      .copy())
+
+    # if there are duplicate session_date rows for the same channel take the mean (simple resolution)
+    slope_filtered = slope_filtered.groupby(session_date_col, as_index=False).mean()
+
+    # merge into sessions on session date
+    merged = df_sess.merge(slope_filtered, on=session_date_col, how='left')
+
+    # if original slope column name collides with other columns, rename to new_col_name
+    if slope_col_name != new_col_name and slope_col_name in merged.columns:
+        merged = merged.rename(columns={slope_col_name: new_col_name})
+
+    return merged
+
 def get_dummy_nwbs(df_trials, df_events, df_fip):
     ses_idx_list = df_trials.ses_idx.unique()
     dummy_nwbs_list = []

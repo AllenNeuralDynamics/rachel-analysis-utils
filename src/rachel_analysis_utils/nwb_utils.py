@@ -195,9 +195,10 @@ def save_nwb_list(nwb_list, plot_loc, df_sess=None):
     # save optional df_sess once per subject
     if df_sess is not None:
         print(f"now saving df_sess")
-
+        subject_ids_sorted = sorted(subject_ids)
+        suffix = "_".join(subject_ids_sorted)
         df_sess.to_csv(
-            Path(plot_loc) / "df_sess.csv"
+            Path(plot_loc) / f"df_sess_{suffix}.csv"
         )
 
 
@@ -220,10 +221,12 @@ def load_nwb_list(plot_loc):
     df_sess = None
 
     # load df_sess if present
-    df_sess_file = plot_loc / "df_sess.csv"
-    if df_sess_file.exists():
-        print("loading df_sess")
-        df_sess = pd.read_csv(df_sess_file)
+    sess_files = sorted(plot_loc.glob("df_sess*.csv"))
+    if len(sess_files):
+        print(f"loading {len(sess_files)} df_sess file(s)")
+        dfs = [pd.read_csv(f) for f in sess_files]
+        # concatenate into a single dataframe
+        df_sess = pd.concat(dfs, ignore_index=True)
     else:
         print("no df_sess found at plot location, skipping")
         df_sess = None

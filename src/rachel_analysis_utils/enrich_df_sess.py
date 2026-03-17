@@ -28,14 +28,11 @@ def add_slope_to_df_sess(df_sess, df_slope, slope_col_name, channel_name,
     df_slope = df_slope.rename(columns={'date': session_date_col})
     # filter slope table to the requested channel and keep only date + slope column
     slope_filtered = (df_slope
-                      .loc[df_slope[channel_col] == channel_name, [session_date_col, slope_col_name]]
+                      .loc[df_slope[channel_col] == channel_name, [session_date_col, 'subject_id', slope_col_name]]
                       .copy())
 
-    # if there are duplicate session_date rows for the same channel take the mean (simple resolution)
-    slope_filtered = slope_filtered.groupby(session_date_col, as_index=False).mean()
-
     # merge into sessions on session date
-    merged = df_sess.merge(slope_filtered, on=session_date_col, how='left')
+    merged = df_sess.merge(slope_filtered, on=[session_date_col, 'subject_id'], how='left')
 
     # if original slope column name collides with other columns, rename to new_col_name
     if slope_col_name != new_col_name and slope_col_name in merged.columns:

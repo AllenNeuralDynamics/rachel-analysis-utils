@@ -25,59 +25,73 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
 output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel[:3]}_{alignment_event.split("_in_")[0]}"
 
+# ...existing code...
 def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm', 
                             alignment_event = 'choice_time_in_session',offsets = [0.33,1]):
-    rpe_slope_dict = {}
+    """
+    Enrich NWB weeks with average signal windows and compute RPE slopes per session for each channel.
+    Fixes previous bug where only the last channel was saved.
+    """
     nwbs_by_week_enriched = []
+
+    # Enrich each week with average signals for every channel
     for nwb_week in nwbs_by_week:
         nwb_week_enriched = copy.deepcopy(nwb_week)
-        for channel in list(parameters["channels"].keys()):
-            if parameters['preprocessing'] != 'raw':
-                channel = channel +  '_' + parameters['preprocessing'] 
+        for ch in list(parameters["channels"].keys()):
+            # build the channel name used for processing (append preprocessing suffix if present)
+            channel = ch
+            if parameters.get('preprocessing', 'raw') != 'raw':
+                channel = channel + '_' + parameters['preprocessing']
 
             avg_signal_col = output_col_name(channel, data_column, alignment_event)
-        
-        
-            nwb_week_enriched = trial_metrics.get_average_signal_window_multi(
-                            nwb_week_enriched,
-                            alignment_event=alignment_event,
-                            offsets=offsets,
-                            channel=channel,
-                            data_column=data_column,
-                            output_col = avg_signal_col
-                        )
-        nwbs_by_week_enriched.append(nwb_week_enriched)
-        
-        # get rpe slope per session 
 
-        df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week_enriched for nwb in nwb_week])
-        rpe_slope = []
+            nwb_week_enriched = trial_metrics.get_average_signal_window_multi(
+                nwb_week_enriched,
+                alignment_event=alignment_event,
+                offsets=offsets,
+                channel=channel,
+                data_column=data_column,
+                output_col=avg_signal_col
+            )
+        nwbs_by_week_enriched.append(nwb_week_enriched)
+
+    # After enriching all weeks, compute RPE slopes per session for each channel
+    df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week_enriched for nwb in nwb_week])
+    rpe_rows = []
+    subject_id = str(nwbs_by_week_enriched[0][0]).split(' ')[1].split('_')[0]
+
+    for ch in list(parameters["channels"].keys()):
+        channel = ch
+        if parameters.get('preprocessing', 'raw') != 'raw':
+            channel = channel + '_' + parameters['preprocessing']
+
+        avg_signal_col = output_col_name(channel, data_column, alignment_event)
+
+        
         for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
-            
             data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
-            data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
+            data = data.dropna(subset=[avg_signal_col, 'RPE_earned'])
             if len(data) == 0:
                 continue
+
             data_neg = data[data['RPE_earned'] < 0]
             data_pos = data[data['RPE_earned'] >= 0]
 
             ses_date = pd.to_datetime(ses_idx.split('_')[1])
-            (_,_, slope_pos) = get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
-            (_,_, slope_neg) = get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
-            rpe_slope.append([ses_date, slope_pos, slope_neg])
-        rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
-        rpe_slope_dict[channel] = rpe_slope
+            (_, _, slope_pos) = get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
+            (_, _, slope_neg) = get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+            rpe_rows.append([subject_id, ses_date, channel, slope_pos, slope_neg])
 
-    subject_id = str(nwbs_by_week_enriched[0][0]).split(' ')[1].split('_')[0]
-    # Concatenate with keys, turning dict keys into an index
-    combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
-    combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
+    # Combine per-channel dataframes into one table with a channel column
 
-    if parameters["save_dfs"] == True:  
+    combined_rpe_slope = pd.DataFrame(rpe_rows, columns=['subject_id', 'date', 'channel', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
+
+
+
+    if parameters.get("save_dfs", False) == True:
         combined_rpe_slope.to_csv(f"/results/data/{subject_id}/rpe_slope.csv")
 
     return nwbs_by_week_enriched, combined_rpe_slope
-
 
 def enrich_df_trials(df_trials):
 

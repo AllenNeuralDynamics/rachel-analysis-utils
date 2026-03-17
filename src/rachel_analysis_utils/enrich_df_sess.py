@@ -69,27 +69,30 @@ def add_all_slopes_to_df_sess(df_sess, df_slope, slope_type,
                                             new_col_name=f'{channel.split("dff")[0]}{slope_col_names[slope_col]}')
     return df_sess_slope
 
-def enrich_df_sess_from_nwbs(nwb_list, df_sess, extractor_func, new_col_name):
+def enrich_df_sess_from_nwbs(nwb_list, df_sess, extractor_dict: dict[str, callable]):
     """
     Call extractor_func for each nwb in nwb_list and merge results into df_sess.
-    extractor_func may return:
-      - (session_date, value)
-      - dict {session_date: value}
-      - pandas.Series indexed by session_date
-      - scalar (in which case the function will try to obtain session_date from the nwb)
+    extractor_func returns a scalar value. 
     The merged column will be named new_col_name.
     Returns a new dataframe (does not modify inputs).
     """
     rows = []
     for nwb in nwb_list:
-        res = extractor_func(nwb)
+        extracted_res = {}
+        for new_col_name, extractor_func in extractor_dict.items():
+            res = extractor_func(nwb)
+            extracted_res[new_col_name] = res
+
         session_date = nwb.session_id.split('_')[1]
-        rows.append({'session_date': str(session_date) if session_date is not None else None, new_col_name: res})
+        subject_id = nwb.session_id.split('_')[0]
+        rows.append({'session_date': str(session_date) if session_date is not None else None, 
+                      'subject_id': int(subject_id) if subject_id is not None else None,
+                      **extracted_res})
 
     df_new = pd.DataFrame(rows).dropna(subset=['session_date'])
 
     # align column name for merge
-    merged = df_sess.merge(df_new, on='session_date', how='left')
+    merged = df_sess.merge(df_new, on=['subject_id', 'session_date'], how='left')
     return merged
 
 # a bunch of extractor functions
@@ -149,18 +152,18 @@ def enrich_df_sess_with_all_getters(nwb_list, df_sess):
 
     This function does not modify the inputs; it returns an enriched copy.
     """
-    enrichments = [
-        ('max_side_bias', get_max_side_bias),
-        ('mean_side_bias', get_mean_side_bias),
-        ('baited_rate', get_baited_rate),
-        ('left_choice_rate', get_left_choice_rate),
-        ('ignore_choice_rate', get_ignore_choice_rate),
-        ('left_right_diff', get_left_right_diff),
-        ('left_right_abs_diff', get_left_right_abs_diff),
-    ]
+    enrichments = {
+        'max_side_bias': get_max_side_bias,
+        'mean_side_bias': get_mean_side_bias,
+        'baited_rate': get_baited_rate,
+        'left_choice_rate': get_left_choice_rate,
+        'ignore_choice_rate': get_ignore_choice_rate,
+        'left_right_diff': get_left_right_diff,
+        'left_right_abs_diff': get_left_right_abs_diff,
+    }
 
     df_out = df_sess.copy()
-    for col_name, extractor in enrichments:
-        df_out = enrich_df_sess_from_nwbs(nwb_list, df_out, extractor, col_name)
+    
+    df_out = enrich_df_sess_from_nwbs(nwb_list, df_out, enrichments)
 
     return df_out

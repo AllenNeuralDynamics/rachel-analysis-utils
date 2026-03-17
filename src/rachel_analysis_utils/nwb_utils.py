@@ -143,7 +143,7 @@ class dummy_nwb:
         return session_folder
 
     @classmethod
-    def load(cls, session_folder):
+    def load(cls, session_folder, load_fip = False):
         """
         Load object from a saved session folder.
         """
@@ -155,6 +155,8 @@ class dummy_nwb:
         obj.nwb_file_loc = None
 
         for file in session_folder.glob("*.parquet"):
+            if "df_fip" in file.name and load_fip == False:
+                continue
             setattr(obj, file.stem, pd.read_parquet(file, engine="fastparquet"))
 
         return obj
@@ -202,7 +204,7 @@ def save_nwb_list(nwb_list, plot_loc, df_sess=None):
         )
 
 
-def load_nwb_list(plot_loc):
+def load_nwb_list(plot_loc, add_fip = False):
     """
     Load dummy_nwb objects from:
 

@@ -140,9 +140,10 @@ def enrich_df_trials(df_trials):
 
     
     ##### PART IV: GETTING STAY/LEAVE #######
-    _choice_shifted = df_trials.groupby('ses_idx')['choice'].shift(1)
-    df_trials['stay'] = df_trials['choice'] == _choice_shifted
-    df_trials['switch'] = df_trials['choice'] != _choice_shifted
+    
+    _choice_shifted = df_trials.groupby('ses_idx')['animal_response'].shift(1)
+    df_trials['stay'] = df_trials['animal_response'] == _choice_shifted
+    df_trials['switch'] = df_trials['animal_response'] != _choice_shifted
     df_trials['response_time'] = df_trials['choice_time_in_trial'] -  df_trials['goCue_start_time_in_trial']
 
 

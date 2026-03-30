@@ -105,25 +105,25 @@ def get_mean_side_bias(nwb):
 
 def get_baited_rate(nwb):
   df_trials = nwb.df_trials
-  mask = ((df_trials['bait_left'] == True) & (df_trials['choice'] == 0.0)) | ((df_trials['bait_right'] == True) & (df_trials['choice'] == 1.0))
+  mask = ((df_trials['bait_left'] == True) & (df_trials['animal_response'] == 0.0)) | ((df_trials['bait_right'] == True) & (df_trials['animal_response'] == 1.0))
   return float(mask.sum()) / float(len(df_trials))
 
 def get_left_choice_rate(nwb):
   df_trials = nwb.df_trials
-  left_count = (df_trials['choice'] == 0.0).sum()
+  left_count = (df_trials['animal_response'] == 0.0).sum()
   return float(left_count) / float(len(df_trials))
 
 def get_ignore_choice_rate(nwb):
   df_trials = nwb.df_trials
-  ignore_count = (df_trials['choice'] == 2.0).sum()
+  ignore_count = (df_trials['animal_response'] == 2.0).sum()
   return float(ignore_count) / float(len(df_trials))
 
 def get_left_right_diff(nwb):
     df = getattr(nwb, 'df_trials', None)
     if df is None or len(df) == 0:
         return float('nan')
-    left = (df['choice'] == 0.0).sum()
-    right = (df['choice'] == 1.0).sum()
+    left = (df['animal_response'] == 0.0).sum()
+    right = (df['animal_response'] == 1.0).sum()
     return float(left - right) / float(len(df))   # signed difference normalized by total trials
 
 def get_left_right_abs_diff(nwb):

@@ -33,8 +33,8 @@ def subsample_lr_thirds(nwb, per_seg_min = 50):
 
     positions = df_trials['trial'].values
 
-    left_mask = df_trials['choice'].to_numpy() == 0
-    right_mask = df_trials['choice'].to_numpy() == 1
+    left_mask = df_trials['animal_response'].to_numpy() == 0
+    right_mask = df_trials['animal_response'].to_numpy() == 1
 
     left_pos = positions[left_mask]
     right_pos = positions[right_mask]
@@ -62,9 +62,9 @@ def subsample_lr_thirds(nwb, per_seg_min = 50):
 
 def split_nwb_by_choice(nwb):
     nwb_split = copy.deepcopy(nwb)
-    nwb_split.df_trials_left = nwb.df_trials.query('choice == 0.0')
-    nwb_split.df_trials_right = nwb.df_trials.query('choice == 1.0')
-    nwb_split.df_trials_ignore = nwb.df_trials.query('choice == 2.0')
+    nwb_split.df_trials_left = nwb.df_trials.query('animal_response == 0.0')
+    nwb_split.df_trials_right = nwb.df_trials.query('animal_response == 1.0')
+    nwb_split.df_trials_ignore = nwb.df_trials.query('animal_response == 2.0')
     return nwb_split
 
 def split_nwb_by_time(nwb):
@@ -255,7 +255,7 @@ def load_nwb_list(plot_loc, add_fip = False):
 
             print(f"loading {session_folder.name}")
 
-            nwb = dummy_nwb.load(session_folder)
+            nwb = dummy_nwb.load(session_folder, load_fip = add_fip)
             nwbs.append(nwb)
 
     return nwbs, df_sess, df_slope 

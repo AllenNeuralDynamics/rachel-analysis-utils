@@ -204,7 +204,7 @@ def save_nwb_list(nwb_list, plot_loc, df_sess=None):
         )
 
 
-def load_nwb_list(plot_loc, add_fip = False):
+def load_nwb_list(plot_loc, load_fip = False):
     """
     Load dummy_nwb objects from:
 
@@ -255,7 +255,7 @@ def load_nwb_list(plot_loc, add_fip = False):
 
             print(f"loading {session_folder.name}")
 
-            nwb = dummy_nwb.load(session_folder, load_fip = add_fip)
+            nwb = dummy_nwb.load(session_folder, load_fip = load_fip)
             nwbs.append(nwb)
 
     return nwbs, df_sess, df_slope 

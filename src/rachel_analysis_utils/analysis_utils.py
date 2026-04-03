@@ -148,3 +148,101 @@ def enrich_df_trials(df_trials):
 
 
     return df_trials
+
+def add_sliding_window_corr(
+    nwb,
+    signal1name: str,
+    signal2name: str,
+    value_col: str = "data_z",
+    fs: float = 20.0,          # Hz
+    window_sec: float = 1.0,
+    step_sec: float = 0.1,
+    min_valid_frac: float = 0.8,
+):
+    """
+    df_fip is long-form: rows are (timestamp, value, event==signal_name).
+    Computes sliding-window Pearson correlation across TIME samples.
+    fs : float, default 20.0
+        Sampling rate of the signals in Hz.
+        This is used to convert window size and step size from seconds
+        to number of samples. For 20 Hz photometry, fs=20.0.
+
+    window_sec : float, default 1.0
+        Length of the sliding window in seconds.
+        Correlation at each time point is computed using samples within
+        this window. For photometry, values between 0.75–1.5 s are typical.
+
+    step_sec : float, default 0.1
+        Step size between successive sliding windows in seconds.
+        Smaller values give smoother correlation traces at higher cost.
+
+    min_valid_frac : float, default 0.8
+        Minimum fraction of finite (non-NaN) samples required within
+        a window for correlation to be computed. Windows with too many
+        NaNs are skipped.
+    
+
+    Returns a dict with:
+      nwb : updated nwb with pearsonR included
+    """
+    if hasattr(nwb, "df_fip"):
+        df_fip = getattr(nwb, "df_fip")
+    else:
+        raise ValueError("Input 'nwb' must have a 'df_fip' attribute or be a DataFrame with fip data.")
+
+
+   # Select and pivot the two signals directly (align by timestamp)
+    df_sel = (
+        df_fip.loc[df_fip['event'].isin([signal1name, signal2name]),
+                   ['timestamps', 'event', value_col]]
+              .dropna()
+    )
+
+    if df_sel.empty:
+        raise ValueError("No data found for the requested signals in df_fip.")
+
+    merged = df_sel.pivot_table(index='timestamps', columns='event', values=value_col, aggfunc='first').reset_index()
+
+    if signal1name not in merged.columns or signal2name not in merged.columns:
+        raise ValueError("One or both signals not present after pivoting (maybe all NaN).")
+
+    t_abs = merged['timestamps'].to_numpy(dtype=float)
+    s1 = merged[signal1name].to_numpy(dtype=float)
+    s2 = merged[signal2name].to_numpy(dtype=float)
+    
+    if len(t_abs) < 10:
+        raise ValueError("Too few aligned samples after merging on timestamps.")
+
+    # Time axis for plotting / window centers (no trel): seconds from start
+    t = t_abs - t_abs[0]
+
+    # Sliding window params (in samples)
+    win = int(round(window_sec * fs))
+    step = int(round(step_sec * fs))
+    if win < 5:
+        raise ValueError("window_sec too small; need at least ~5 samples.")
+    if step < 1:
+        raise ValueError("step_sec too small; must be >= 1/fs.")
+
+        # Use pandas rolling correlation (centered). Use integer index so window size is number of samples.
+    s1s = pd.Series(s1)
+    s2s = pd.Series(s2)
+
+    min_periods = max(5, int(np.ceil(win * min_valid_frac)))
+
+    # rolling .corr handles pairwise NaNs and produces NaN where insufficient valid pairs
+    r_full = s1s.rolling(window=win, center=True, min_periods=min_periods).corr(s2s)
+
+    # sample the centered rolling correlation at the same centers as before
+    centers = np.arange(win // 2, len(t) - win // 2, step)
+    t_centers = t[centers]
+
+    r = r_full.to_numpy(dtype=float)[centers]
+
+    df_corr = pd.DataFrame({'data':r, 'timestamps':t_centers})
+    df_corr['event'] = f'{signal1name[:3]}:{signal2name[:3]}_pearsonR'
+
+    nwb.df_fip = nwb.df_fip.merge(df_corr, how = 'outer')
+    nwb.df_fip = nwb.df_fip.sort_values( by = 'timestamps')
+
+    return nwb

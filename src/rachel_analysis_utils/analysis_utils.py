@@ -239,7 +239,7 @@ def add_sliding_window_corr(
 
     r = r_full.to_numpy(dtype=float)[centers]
 
-    df_corr = pd.DataFrame({'data':r, 'timestamps':t_centers})
+    df_corr = pd.DataFrame({'data_z':r, 'timestamps':t_centers})
     df_corr['event'] = f'{signal1name[:3]}:{signal2name[:3]}_pearsonR'
 
     nwb.df_fip = nwb.df_fip.merge(df_corr, how = 'outer')

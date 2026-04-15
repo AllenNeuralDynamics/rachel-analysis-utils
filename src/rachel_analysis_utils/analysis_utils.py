@@ -154,7 +154,48 @@ def interp_to_uniform(x_old, y_old, x_new):
     if np.sum(mask) < 2:
         return np.full_like(x_new, np.nan, dtype=float)
     return np.interp(x_new, x_old[mask], y_old[mask])
+def resample_pair_to_uniform(df_sel, signal1name, signal2name, value_col, fs, min_len=10):
+    """
+    Build separate per-signal timeseries, find overlap, and interpolate both onto
+    a common uniform timebase. Returns (t, s1, s2) or None if resampling is not possible.
+    """
+    s1_df = (
+        df_sel.loc[df_sel['event'] == signal1name, ['timestamps', value_col]]
+              .dropna()
+              .groupby('timestamps', as_index=False)
+              .first()
+              .sort_values('timestamps')
+    )
+    s2_df = (
+        df_sel.loc[df_sel['event'] == signal2name, ['timestamps', value_col]]
+              .dropna()
+              .groupby('timestamps', as_index=False)
+              .first()
+              .sort_values('timestamps')
+    )
 
+    if s1_df.empty or s2_df.empty:
+        return None
+
+    t1 = s1_df['timestamps'].to_numpy(dtype=float)
+    v1 = s1_df[value_col].to_numpy(dtype=float)
+    t2 = s2_df['timestamps'].to_numpy(dtype=float)
+    v2 = s2_df[value_col].to_numpy(dtype=float)
+
+    # overlapping interval intersection
+    start = max(t1.min(), t2.min())
+    end = min(t1.max(), t2.max())
+    if end <= start:
+        return None
+
+    t_uniform = np.arange(start, end + 1.0 / fs / 2, 1.0 / fs)
+    if len(t_uniform) < min_len:
+        return None
+
+    s1 = interp_to_uniform(t1, v1, t_uniform)
+    s2 = interp_to_uniform(t2, v2, t_uniform)
+    t = t_uniform - t_uniform[0]
+    return (t, s1, s2)
 
 def add_sliding_window_corr(
     nwb,
@@ -224,19 +265,11 @@ def add_sliding_window_corr(
     overlap_count = np.sum(np.isfinite(s1) & np.isfinite(s2))
     if overlap_count < max(10, int(len(t_abs) * 0.1)):
         # build uniform timebase spanning available timestamps
-        t_uniform = np.arange(t_abs[0], t_abs[-1], 1.0 / fs)
-        if len(t_uniform) < 10:
-            raise ValueError("Too few samples on uniform timebase after resampling.")
-        # Use pandas Series for index-based interpolation
-        # build uniform timebase spanning available timestamps (inclusive)
-        t_uniform = np.arange(t_abs[0], t_abs[-1] + 1.0/fs/2, 1.0 / fs)
-        if len(t_uniform) < 10:
-            raise ValueError("Too few samples on uniform timebase after resampling.")
-        # numpy interpolation on finite points (more robust than pandas reindex with float indices)
-
-        s1 = interp_to_uniform(t_abs, s1, t_uniform)
-        s2 = interp_to_uniform(t_abs, s2, t_uniform)
-        t = t_uniform - t_uniform[0]
+        try:
+            t, s1, s2 = resample_pair_to_uniform(df_sel, signal1name, signal2name, value_col, fs, min_len=10)
+        except:
+            print("cannot calculate pearsonr")
+            return nwb
     else:
         # Time axis for plotting / window centers (no trel): seconds from start
         t = t_abs - t_abs[0]
@@ -269,7 +302,7 @@ def add_sliding_window_corr(
     # If the entire correlation vector is NaN, nothing to merge — return unchanged.
     if np.all(np.isnan(r)):
         return nwb
-        
+
     nwb.df_fip = nwb.df_fip.merge(df_corr, how = 'outer')
     nwb.df_fip = nwb.df_fip.sort_values( by = 'timestamps')
 

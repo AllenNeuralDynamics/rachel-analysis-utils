@@ -14,6 +14,15 @@ from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 import copy 
 import re
 
+def drop_na_measurments(nwb_list):
+    for nwb in nwb_list:
+        df = getattr(nwb, "df_fip", None)
+        if isinstance(df, pd.DataFrame) and "intended_measurement" in df.columns:
+            keep = df["intended_measurement"].notna() & (
+                df["intended_measurement"].astype(str).str.strip().str.upper() != "N/A"
+            )
+            nwb.df_fip = df.loc[keep].reset_index(drop=True)
+    return nwb_list
 
 # --- helper utilities ---
 def _parse_session_id(ses_idx):
@@ -24,9 +33,6 @@ def _parse_session_id(ses_idx):
         return parts[0], parts[1]
     return ses, ""
 
-
-# helper to extract G_/R_ channels-to-drop for this specific date from a mapping that
-# may be either date->channels or channel->dates; always return only G_/R_ keys
 def _channels_for_date(mapping, target_date):
     # otherwise assume channel->list_of_dates (we only include the channel keys that are G_/R_ and have this date)
     chans = []
@@ -37,22 +43,48 @@ def _channels_for_date(mapping, target_date):
             chans.append(ch)
     return chans
 
+# pulled-out helpers
+def _actual_map_for_session(entry, date, correct_map):
+    """
+    Return mapping G_ -> region for this session date.
+    Prefer explicit per-session misconnect_fixes/misconnections that contain G_ keys;
+    otherwise return a shallow copy of correct_map.
+    """
+    if not isinstance(entry, dict):
+        return dict(correct_map or {})
+    misconnections = entry.get("misconnect_fixes", {}) or entry.get("misconnections", {}) or {}
+    if date in misconnections and any(isinstance(k, str) and k.startswith("G_") for k in misconnections[date].keys()):
+        return {k: v for k, v in misconnections[date].items() if isinstance(k, str) and k.startswith("G_")}
+    return dict(correct_map or {})
+
+def _map_event_to_intended_measurement(event_str, session_map, correct_map):
+    """
+    Map an event string to intended area(s).
+    - Extract G_* tokens from the event (e.g. G_0, G_2).
+    - Prefer session_map, fall back to correct_map.
+    - Return colon-joined unique areas in order of appearance, or np.nan.
+    """
+    if not isinstance(event_str, str):
+        return np.nan
+    tokens = re.findall(r'(G_\d+|R_\d+)', event_str)
+    if not tokens:
+        return np.nan
+    areas = []
+    seen = set()
+    for t in tokens:
+        area = (session_map.get(t) if session_map else None) or (correct_map.get(t) if correct_map else None)
+        if area and area not in seen:
+            seen.add(area)
+            areas.append(area)
+    return ":".join(areas) if areas else np.nan
+
 def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=False):
     """
-    Return a copy of nwb with channels/sessions removed per entry.
+    Return a deepcopy of nwb with channels/sessions removed per entry.
 
-    Behavior:
-      - If entry.drop_all or the session date is listed in entry.drop_sessions
-        (or in entry.borderline_drop when include_borderline=True) -> return None
-        (drop entire nwb/session).
-      - Remove channel rows from n.df_fip according to:
-          * entry.drop_channels (subject-level)
-          * entry.drop_sessions_channels which may be either:
-                - date -> [channels]
-                - channel -> [dates]
-          * when include_borderline=True, also consider
-            entry.borderline_drop_sessions_channels or entry.borderline_drop_channels
-            in the same two possible formats.
+    Drops whole session if drop_all or date in drop_sessions.
+    Removes rows from n.df_fip where the 'event' string contains any G_/R_ key
+    listed in the subject/session drop lists.
     """
     # tolerate non-dict entry
     if not isinstance(entry, dict):
@@ -67,15 +99,11 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=Fals
     drop_sessions = entry.get("drop_sessions", []) or entry.get("drop_dates", []) or []
     if date in drop_sessions:
         return None
-    if include_borderline:
-        borderline_sessions = entry.get("borderline_drop", []) or []
-        if date in borderline_sessions:
-            return None
 
     # start with a deepcopy to avoid mutating input
     n = copy.deepcopy(nwb)
 
-#    Build a local set of subject-level channels to drop (ONLY G_/R_ keys).
+    # Build a local set of subject-level channels to drop (ONLY G_/R_ keys).
     subject_drop_raw = entry.get("drop_channels", []) or []
     subject_drop_set = {
         str(x) for x in subject_drop_raw
@@ -86,11 +114,11 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=Fals
     per_session_map = entry.get("drop_sessions_channels", {}) or {}
     session_specific_chs = _channels_for_date(per_session_map, date)
 
-    # borderline per-session drops (support both naming variants)
+    # optional borderline drops (support both naming variants) if requested
     borderline_map = entry.get("borderline_drop_sessions_channels", {}) or entry.get("borderline_drop_channels", {}) or {}
     borderline_specific_chs = _channels_for_date(borderline_map, date) if include_borderline else []
 
-     # union into subject_drop_set (ONLY G_/R_ keys)
+    # union into subject_drop_set (ONLY G_/R_ keys)
     for ch in session_specific_chs + borderline_specific_chs:
         if isinstance(ch, str) and (ch.startswith("G_") or ch.startswith("R_")):
             subject_drop_set.add(ch)
@@ -99,25 +127,32 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=Fals
     # Match if the event string CONTAINS any entry in subject_drop_set.
     if hasattr(n, "df_fip") and isinstance(n.df_fip, pd.DataFrame) and subject_drop_set:
         df_fip = n.df_fip.copy()
-        # build regex that matches any of the drop keys
-        pattern = "|".join(re.escape(s) for s in sorted(subject_drop_set, key=len, reverse=True))
-        # use contains (case-sensitive) with na=False to avoid NaNs
+        # build regex that matches any of the drop keys (match tokens like G_0 anywhere)
+        pattern = r'(' + r'|'.join(re.escape(s) for s in sorted(subject_drop_set, key=len, reverse=True)) + r')'
+        # keep rows that DO NOT match the drop pattern in the 'event' column
         if "event" in df_fip.columns:
-            mask_keep = ~df_fip["event"].astype(str).str.contains(pattern, regex=True, na=False)
-            n.df_fip = df_fip[mask_keep].reset_index(drop=True)
-    
+            # keep_mask = ~df_fip["event"].astype(str).str.contains(pattern, regex=True, na=False)
+            # keep rows that DO NOT match the drop pattern in the 'event' column
+            pattern = r'(?:' + r'|'.join(re.escape(s) for s in sorted(subject_drop_set, key=len, reverse=True)) + r')'
+            keep_mask = ~df_fip["event"].astype(str).str.contains(pattern, regex=True, na=False)
+            n.df_fip = df_fip.loc[keep_mask].reset_index(drop=True)
+        else:
+            # no event column -> cannot drop channel-specific rows, so return original n
+            n.df_fip = df_fip
+
     return n
 
 def apply_curation_nwb_list(nwb_list, curation, drop_border = False):
     """
-    Apply curation rules to a list (or list-of-lists) of dummy_nwb objects.
+    Apply curation rules to a list (or list-of-lists) of nwb objects.
 
     Returns two lists:
       - curated: nwb objects with drop_channels removed and drop_sessions omitted
-      - curated_with_borderline: same as above but also applying 'borderline_drop'
+      - curated_with_borderline: same as above but also applying 'borderline_drop' variants
 
-    Uses helper functions to determine per-subject/session drops and to apply
-    channel removals to each dummy_nwb.
+    Notes:
+      - Annotates nwb.df_fip with 'intended_measurement' ONCE before applying drops.
+      - intended_measurement uses per-session misconnect_fixes if available, otherwise correct_mapping.
     """
     # flatten input
     flat = [
@@ -136,16 +171,31 @@ def apply_curation_nwb_list(nwb_list, curation, drop_border = False):
         subject, date = _parse_session_id(ses_idx)
         entry = curation.get(str(subject), {}) or {}
 
-        n_cur = _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=False)
+        # compute session-specific mapping once
+        session_map = _actual_map_for_session(entry, date, correct_map)
+
+        # annotate intended_measurement ONCE on a deepcopy before any drops
+        nwb_annot = copy.deepcopy(nwb)
+        if hasattr(nwb_annot, "df_fip") and isinstance(nwb_annot.df_fip, pd.DataFrame):
+            df_fip = nwb_annot.df_fip.copy()
+            if "event" in df_fip.columns:
+                df_fip["intended_measurement"] = df_fip["event"].apply(lambda ev: _map_event_to_intended_measurement(ev, session_map, correct_map))
+            else:
+                df_fip["intended_measurement"] = np.nan
+            nwb_annot.df_fip = df_fip.reset_index(drop=True)
+
+        # now apply drops (these return deepcopy-modified objects)
+        n_cur = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, include_borderline=False)
         if n_cur is not None:
             curated.append(n_cur)
-        # apply curation including borderline
+
         if not drop_border:
-            n_cur_b = _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=True)
+            n_cur_b = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, include_borderline=True)
             if n_cur_b is not None:
                 curated_with_borderline.append(n_cur_b)
 
     return curated, curated_with_borderline
+
 
 def apply_curation_by_subject_df_sess(df_sess, curation):
     """
@@ -264,6 +314,8 @@ def apply_curation_by_subject_df_sess(df_sess, curation):
     return df_curated.reset_index(drop=True), df_dropped.reset_index(drop=True)
 
 def pick_side(side_pos, seg_bounds, per_seg_min):
+    if len(side_pos) == 0 or per_seg_min == 0:
+        return np.array([]), []
     side_by_seg = []
     for lo, hi in seg_bounds:
         side_in = side_pos[(side_pos >= lo) & (side_pos < hi)]
@@ -384,10 +436,10 @@ class dummy_nwb:
                     val["data"] = val["data"].astype(str)
                 
                 # df = self.convert_df_to_saveable_format(val)
-                if attr == "df_trials":
-                    val["side_bias_confidence_interval_low"] = val["side_bias_confidence_interval"].apply(lambda x: x[0])
-                    val["side_bias_confidence_interval_high"] = val["side_bias_confidence_interval"].apply(lambda x: x[1])
-                    val = val.drop(columns=["side_bias_confidence_interval"])
+                if attr == "df_trials" and "side_bias_confidence_interval" in val.columns:
+                        val["side_bias_confidence_interval_low"] = val["side_bias_confidence_interval"].apply(lambda x: x[0])
+                        val["side_bias_confidence_interval_high"] = val["side_bias_confidence_interval"].apply(lambda x: x[1])
+                        val = val.drop(columns=["side_bias_confidence_interval"])
                 val.to_parquet(session_folder / f"{attr}.parquet", index=False, engine="fastparquet")
 
         return session_folder

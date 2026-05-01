@@ -55,10 +55,10 @@ def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'd
     subject_id = str(nwbs_by_week_enriched[0][0]).split(' ')[1].split('_')[0]
 
     for channel in all_channels:
-        if channel not in df_trials_all.columns:
-            continue
-        avg_signal_col = output_col_name(channel, data_column, alignment_event)
 
+        avg_signal_col = output_col_name(channel, data_column, alignment_event)
+        if avg_signal_col not in df_trials_all.columns:
+            continue
         
         for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
             data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]

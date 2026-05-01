@@ -482,7 +482,7 @@ class dummy_nwb:
 
         return obj
 
-def save_nwb_list(nwb_list, plot_loc, df_sess=None):
+def save_nwb_list(flat_dummy_nwbs, plot_loc, df_sess=None):
     """
     Save a list or list-of-lists of dummy_nwb objects.
 
@@ -494,12 +494,6 @@ def save_nwb_list(nwb_list, plot_loc, df_sess=None):
                     <attr>.parquet
     """
 
-    # flatten list or list-of-lists
-    flat_dummy_nwbs = [
-        nwb
-        for item in nwb_list
-        for nwb in (item if isinstance(item, list) else [item])
-    ]
 
     subject_ids = set()
 
@@ -632,6 +626,22 @@ def get_date_and_week_interval(df, start_date):
     date_series = pd.to_datetime(df['ses_idx'].str.split('_').str[1], format='%Y-%m-%d')
     week_interval_series = ((date_series - start_date).dt.days // 7) + 1
     return week_interval_series
+
+def split_nwbs_by_week(nwbs_all):
+    nwbs_by_week = []
+    nwb_week_i = []
+    curr_week = 1
+    for nwb in nwbs_all:
+        week_interval = nwb.df_trials.week_interval.unique()[0]
+        if week_interval == curr_week:
+            nwb_week_i.append(nwb)
+        else:
+            nwbs_by_week.append(nwb_week_i)
+            nwb_week_i = [nwb]
+            curr_week = week_interval
+    nwbs_by_week.append(nwb_week_i)
+
+    return nwbs_by_week
 
 def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
     start_date = pd.to_datetime(df_sess['session_date'].min())

@@ -75,9 +75,11 @@ def _map_event_to_intended_measurement(event_str, session_map, correct_map):
             areas.append(area)
     return ":".join(areas) if areas else np.nan
 
-def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=False):
+def _apply_channel_drops_to_nwb(nwb, entry, correct_map, drop_borderline=False):
     """
     Return a deepcopy of nwb with channels/sessions removed per entry.
+
+    drop_borderline: also drop the borderline sessions.
 
     Drops whole session if drop_all or date in drop_sessions.
     Removes rows from n.df_fip where the 'intended_measurement' matches any region
@@ -123,7 +125,7 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=Fals
 
     # optional borderline drops (support both naming variants) if requested
     borderline_map = entry.get("borderline_drop_sessions_channels", {}) or entry.get("borderline_drop_channels", {}) or {}
-    borderline_specific_chs = _channels_for_date(borderline_map, date) if include_borderline else []
+    borderline_specific_chs = _channels_for_date(borderline_map, date) if drop_borderline else []
     for ch in borderline_specific_chs:
         region = correct_map.get(ch)
         if region:
@@ -155,9 +157,13 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, include_borderline=Fals
             n.df_fip = df_fip
 
     return n
-def apply_curation_nwb_list(nwb_list, curation, drop_border = False):
+def apply_curation_nwb_list(nwb_list, curation, drop_borderline = False):
     """
     Apply curation rules to a list (or list-of-lists) of nwb objects.
+
+    nwb_list: list of nwbs
+    curation: dataframe of curation notes from json. 
+    drop_borderline: determines if we should drop borderline sessions as well
 
     Returns two lists:
       - curated: nwb objects with drop_channels removed and drop_sessions omitted
@@ -198,12 +204,12 @@ def apply_curation_nwb_list(nwb_list, curation, drop_border = False):
             nwb_annot.df_fip = df_fip.reset_index(drop=True)
 
         # now apply drops (these return deepcopy-modified objects)
-        n_cur = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, include_borderline=False)
+        n_cur = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, drop_borderline=False)
         if n_cur is not None:
             curated.append(n_cur)
 
-        if not drop_border:
-            n_cur_b = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, include_borderline=True)
+        if drop_borderline:
+            n_cur_b = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, drop_borderline=True)
             if n_cur_b is not None:
                 curated_with_borderline.append(n_cur_b)
 

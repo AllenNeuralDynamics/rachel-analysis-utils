@@ -1,0 +1,73 @@
+{
+    "project": "CeA",
+    "correct_mapping": {
+        "G_0": "CeA(L)-dLight",
+        "G_1": "CeA(R)-5-HT",
+        "R_0": "CeA(L)-rAch",
+        "R_1": "CeA(R)-rDA"
+    },
+    "example_session_chosen": "behavior_785193_2026-06-06",
+    "785193": {
+        "notes": "G_0: all good. G_1: mostly OK — drop anything with SNR < 15 (SNR < 20 is noisy). R_0: all good. R_1: drop across mouse.",
+        "misconnect_fixes": {},
+        "drop_channels": [
+            "R_1"
+        ],
+        "drop_sessions": [],
+        "borderline_drop": [],
+        "drop_sessions_channels": {
+            "G_1": [
+                "2025-05-29"
+            ]
+        },
+        "borderline_drop_sessions_channels": {
+            "G_1": [
+                "2025-05-15",
+                "2025-05-16",
+                "2025-05-28",
+                "2025-06-02",
+                "2025-06-03",
+                "2025-06-10"
+            ]
+        }
+    },
+    "781900": {
+        "notes": "Drop 2025-06-24 (all sessions). R_0 and R_1: drop (poor signals / drop all). G_0 and G_1 available for summary plots where applicable.",
+        "misconnect_fixes": {},
+        "drop_channels": [
+            "R_0",
+            "R_1"
+        ],
+        "drop_sessions": [
+            "2025-06-24"
+        ],
+        "borderline_drop":[],
+        "drop_sessions_channels": {},
+        "borderline_drop_sessions_channels": {}
+    },
+    "781901": {
+        "notes": "Drop 2025-06-26 (all sessions). G_1: fairly noisy, would drop. R_0: good. R_1: generally good but some noisy/borderline sessions.",
+        "misconnect_fixes": {},
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [
+            "2025-06-26"
+        ],
+        "borderline_drop": [],
+        "drop_sessions_channels": {
+            "R_1": [
+                "2025-05-29",
+                "2025-06-12",
+                "2025-06-18"
+            ]
+        },
+        "borderline_drop_sessions_channels": {
+            "R_1": [
+                "2025-05-29",
+                "2025-06-12",
+                "2025-06-18"
+            ]
+        }
+    }
+}

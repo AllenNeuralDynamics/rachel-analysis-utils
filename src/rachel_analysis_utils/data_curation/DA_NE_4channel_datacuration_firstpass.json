@@ -1,0 +1,972 @@
+{
+  "correct_mapping": {
+    "G_0": "PL(L)-Gcamp",
+    "G_1": "PL(R)-Gcamp",
+    "G_2": "NAc(L)-dLight",
+    "G_3": "NAc(R)-dLight",
+    "R_2": "NAc(L)-rAch",
+    "R_3": "NAc(R)-rAch"
+  },
+  "808054": {
+    "notes": "noisy(PL-L)/good/good/good -- nearly all sessions have the misconnections listed below",
+    "misconnect_fixes": {
+      "2025-09-02": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-03": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-04": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-05": {
+        "G_0": "PL(L)-Gcamp",
+        "G_1": "NAc(L)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "PL(R)-Gcamp",
+        "R_0": "N/A",
+        "R_1": "NAc(L)-rAch",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "N/A"
+      },
+      "2025-09-08": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-09": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-10": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-11": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-12": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-15": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-16": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-17": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-18": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-19": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-22": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-23": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-24": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-25": {
+        "note": "something's wrong; two additional weird sessions — Rachel Lee to check",
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-26": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-02": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(L)-dLight",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-07": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-08": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(L)-dLight",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-10": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-13": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(L)-dLight",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-14": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-15": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-16": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-17": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      }
+    },
+    "drop_channels": ["G_0"],
+    "drop_sessions": [],
+    "drop_sessions_channels": {}
+  },
+  "808056": {
+    "notes": "noisy(PL-L)/very good(PL-R)/ok(NAc-L)/good(NAc-R) -- nearly all sessions have the misconnections listed below",
+    "misconnect_fixes": {
+      "2025-09-12": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-15": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-16": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-17": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-18": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-22": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-23": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-24": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-25": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-26": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-09-29": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-01": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-02": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-06": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-07": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-08": {
+        "note": "not sure to drop; user review",
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-10": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-13": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-14": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-15": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-16": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-17": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-20": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-21": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-22": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-23": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-24": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-27": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-28": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-29": {
+        "note": "not sure to drop",
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-10-30": {
+        "note": "not sure to drop",
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-04": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-05": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-06": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-07": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-10": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-11": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-12": {
+        "G_0": "PL(R)-Gcamp",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-13": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-14": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-17": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-20": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      },
+      "2025-11-21": {
+        "G_0": "NAc(L)-dLight",
+        "G_1": "PL(L)-Gcamp",
+        "G_2": "PL(R)-Gcamp",
+        "G_3": "NAc(R)-dLight",
+        "R_0": "N/A",
+        "R_1": "N/A",
+        "R_2": "NAc(R)-rAch",
+        "R_3": "NAc(L)-rAch"
+      }
+    },
+    "drop_channels": ["G_0"],
+    "drop_sessions": [],
+    "drop_sessions_channels": {}
+  },
+    "809487": {
+        "notes": "ok(PL-L)/noisy(PL-R)/good(NAc-L)/good(NAc-R)",
+        "misconnect_fixes": {
+            "2025-09-09": {
+                "G_0": "NAc(L)-dLight",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"NAc(L)-rAch",
+                "R_1":"N/A",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            },
+            "2025-09-11": {
+                "G_0": "NAc(L)-dLight",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"NAc(L)-rAch",
+                "R_1":"N/A",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            }
+        },
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [
+            "2025-09-19"
+        ],
+        "drop_sessions_channels": {}
+    },
+    "809488": {
+        "notes": "drop all - no signal",
+        "drop_all": true,
+        "drop_channels": [
+        ],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "809491": {
+        "notes": "ok(PL-L)/noisy(PL-R)/good(NAc-L)/good(NAc-R)",
+        "misconnect_fixes": {},
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "813929": {
+        "notes": " noisy(PL-L)/noisy(PL-R)/good(NAc-L)/good(NAc-R)",
+        "misconnect_fixes": {
+            "2025-11-10": {
+                "G_0": "PL(L)-Gcamp",
+                "G_1": "NAc(L)-dLight",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "PL(R)-Gcamp",
+                "R_0":"NAc(L)-rAch",
+                "R_1":"N/A",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            }
+        },
+        "drop_channels": [
+            "G_0",
+            "G_1"
+        ],
+        "drop_sessions": [
+            "2025-10-28",
+            "2025-10-30",
+            "2025-11-13",
+            "2025-11-14",
+            "2025-11-21"
+        ],
+        "drop_sessions_channels": {}
+    },
+    "815334": {
+        "notes": "ok(PL-L)/noisy(PL-R)/good(NAc-L)/good(NAc-R)",
+        "misconnect_fixes": {
+            "2025-10-08": {
+                "G_0": "NAc(L)-dLight",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"NAc(L)-rAch",
+                "R_1":"N/A",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            },
+            "2025-10-14": {
+                "G_0": "NAc(L)-dLight",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"NAc(L)-rAch",
+                "R_1":"N/A",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            }
+        },
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [
+            "2025-10-30"
+        ],
+        "drop_sessions_channels": {}
+    },
+    "816212": {
+        "notes": "ok(PL-L)/noisy(PL-R)/good(NAc-L)/good(NAc-R)",
+        "misconnect_fixes": {
+            "2025-12-04": {
+                "G_0": "PL(L)-Gcamp",
+                "G_1": "NAc(L)-dLight",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"N/A",
+                "R_1":"NAc(L)-rAch",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            }
+        },
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "816214": {
+        "notes": "good(PL-L)/noisy(PL-R)/good(NAc-L)/ok(NAc-R)",
+        "misconnect_fixes": {
+            "2025-11-10": {
+                "G_0": "PL(L)-Gcamp",
+                "G_1": "NAc(L)-dLight",
+                "G_2": "PL(R)-Gcamp",
+                "G_3": "NAc(R)-dLight",
+                "R_0":"N/A",
+                "R_1":"NAc(L)-rAch",
+                "R_2":"N/A",
+                "R_3":"NAc(R)-rAch"
+            },
+            "2025-12-01": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-02": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-03": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-04": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-05": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-10": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-11": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            },
+            "2025-12-12": {
+                "G_0": "PL(R)-Gcamp",
+                "G_1": "PL(L)-Gcamp",
+                "G_2": "NAc(R)-dLight",
+                "G_3": "NAc(L)-dLight",
+                "R_0":"N/A",
+                "R_1":"N/A",
+                "R_2":"NAc(R)-rAch",
+                "R_3":"NAc(L)-rAch"
+            }
+        },
+        "drop_channels": [
+            "G_1"
+        ],
+        "drop_sessions": [
+            "2025-11-13",
+            "2025-11-18",
+            "2025-11-19"
+        ],
+        "drop_sessions_channels": {}
+    }
+}

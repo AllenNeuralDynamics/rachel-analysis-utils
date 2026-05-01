@@ -1,0 +1,66 @@
+{
+    "correct_mapping": {
+        "G_0": "PL(L)",
+        "G_1": "PL(R)",
+        "G_2": "NAc(L)",
+        "G_3": "NAc(R)"
+    },
+    "808054": {
+        "notes":  "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "808056": {
+        "notes": "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "809487": {
+        "notes": "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "809491": {
+        "notes":  "",
+        "misconnect_fixes": {},
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "813929": {
+        "notes":  "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "815334": {
+        "notes":  "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "816212": {
+        "notes": "",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {}
+    },
+    "816214": {
+        "notes": "weird motion artifacts",
+        "drop_channels": [],
+        "drop_sessions": [],
+        "drop_sessions_channels": {
+            "2025-11-07":"G_3",
+            "2025-11-10":"G_3",
+            "2025-11-11":"G_3",
+            "2025-11-20":"G_3",
+            "2025-11-21":"G_3",
+            "2025-11-24":"G_3",
+            "2025-11-25":"G_3"
+
+        }
+    }
+}

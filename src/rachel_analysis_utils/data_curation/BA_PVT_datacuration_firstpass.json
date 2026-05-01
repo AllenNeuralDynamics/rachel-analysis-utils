@@ -1,0 +1,60 @@
+{
+    "project": "BA/PVT",
+    "correct_mapping": {
+        "G_0": "BA-nLight",
+        "G_1": "BA-5-HT",
+        "G_2": "PVT-nLight",
+        "R_0": "BA-rDA",
+        "R_1": "BA-Ach",
+        "R_2": "PVT-rAch"
+    },
+    "example_session_chosen": "behavior_802291_2025-09-04",
+    "802290": {
+        "notes": "Drop all",
+        "misconnect_fixes": {},
+        "drop_all": true,
+        "drop_channels": [],
+        "drop_sessions": [],
+        "borderline_drop": [],
+        "drop_sessions_channels": {},
+        "borderline_drop_sessions_channels": {}
+    },
+    "802291": {
+        "notes": "G_1: strong, keep. R_1: sometimes poor signals — drop anything with SNR < 20; below 25 is borderline.",
+        "misconnect_fixes": {},
+        "drop_all": false,
+        "drop_channels": [
+            "G_0", "R_0", "R_2", "G_2"
+        ],
+        "drop_sessions": [
+            "2025-08-29",
+            "2025-08-28",
+            "2025-08-17",
+            "2025-08-22",
+            "2025-09-05"
+        ],
+        "borderline_drop": [],
+        "drop_sessions_channels": {},
+        "borderline_drop_sessions_channels": {
+            "R_1": [
+                "2025-09-04",
+                "2025-09-03",
+                "2025-08-20",
+                "2025-08-18",
+                "2025-08-07",
+                "2025-08-14"
+            ]
+        }
+    },
+    "802292": {
+        "notes": "Drop all",
+
+        "drop_all": true,
+        "misconnect_fixes": {},
+        "drop_channels": [],
+        "drop_sessions": [],
+        "borderline_drop": [],
+        "drop_sessions_channels": {},
+        "borderline_drop_sessions_channels": {}
+    }
+}

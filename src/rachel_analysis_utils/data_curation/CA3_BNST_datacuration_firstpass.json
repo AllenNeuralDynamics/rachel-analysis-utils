@@ -1,0 +1,71 @@
+{
+    "project": "CA3/BNST",
+    "correct_mapping": {
+        "G_0": "BNST-5-HT",
+        "G_1": "CA3-5-HT",
+        "G_2": "CA3-nLight"
+    },
+    "example_session_chosen": "behavior_810758_2025--10-28",
+    "810756": {
+        "notes": "G_0: generally good. G_1: sometimes good, drop SNR < 20. G_2: drop all.",
+        "misconnect_fixes": {},
+        "drop_channels": [
+            "G_2"
+        ],
+        "drop_sessions": [],
+        "borderline_drop": [],
+        "drop_sessions_channels": {
+            "G_1": ["2025-11-10"]
+        },
+        "borderline_drop_sessions_channels": {
+            "G_0": [
+                "2025-11-12"
+            ],
+            "G_1": [
+                "2025-11-11",
+                "2025-11-12"
+            ]
+        }
+    },
+    "810758": {
+        "notes": "Drop 2025-10-14 (no signal). G_0 & G_1: keep generally. G_2: only a few good sessions (see keep list).",
+        "misconnect_fixes": {},
+        "drop_channels": [],
+        "drop_sessions": [
+            "2025-10-14"
+        ],
+        "borderline_drop": [],
+        "drop_sessions_channels": {
+            "G_2": [
+                "2025-10-08",
+                "2025-10-10",
+                "2025-10-13",
+                "2025-10-14",
+                "2025-10-15",
+                "2025-10-21",
+                "2025-10-22",
+                "2025-10-23",
+                "2025-10-24",
+                "2025-10-27",
+                "2025-10-29",
+                "2025-10-30"
+            ] 
+        },
+        "borderline_drop_sessions_channels": {}
+    },
+    "810759": {
+        "notes": "G_0: borderline/noisy overall. Drop G_1 and G_2.",
+        "misconnect_fixes": {},
+        "drop_all": true,
+        "drop_channels": [
+            "G_0",
+            "G_1",
+            "G_2"
+        ],
+        "drop_sessions": [],
+        "borderline_drop": [
+        ],
+        "drop_sessions_channels": {},
+        "borderline_drop_sessions_channels": {}
+    }
+}

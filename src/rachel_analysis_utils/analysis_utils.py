@@ -25,7 +25,7 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
 output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel[:3]}_{alignment_event.split("_in_")[0]}"
 
-def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm', 
+def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'data_z_norm', 
                             alignment_event = 'choice_time_in_session',offsets = [0.33,1]):
     """
     Enrich NWB weeks with average signal windows and compute RPE slopes per session for each channel.
@@ -36,11 +36,7 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
     # Enrich each week with average signals for every channel
     for nwb_week in nwbs_by_week:
         nwb_week_enriched = copy.deepcopy(nwb_week)
-        for channel in list(parameters["channels"].keys()):
-            # build the channel name used for processing (append preprocessing suffix if present)
-            if parameters.get('preprocessing', 'raw') != 'raw':
-                channel = channel + '_' + parameters['preprocessing']
-
+        for channel in all_channels:
             avg_signal_col = output_col_name(channel, data_column, alignment_event)
 
             nwb_week_enriched = trial_metrics.get_average_signal_window_multi(
@@ -58,10 +54,7 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
     rpe_rows = []
     subject_id = str(nwbs_by_week_enriched[0][0]).split(' ')[1].split('_')[0]
 
-    for ch in list(parameters["channels"].keys()):
-        channel = ch
-        if parameters.get('preprocessing', 'raw') != 'raw':
-            channel = channel + '_' + parameters['preprocessing']
+    for channel in all_channels:
 
         avg_signal_col = output_col_name(channel, data_column, alignment_event)
 
@@ -86,7 +79,7 @@ def add_AUC_and_rpe_slope(nwbs_by_week, parameters, data_column = 'data_z_norm',
 
 
 
-    if parameters.get("save_dfs", False) == True:
+    if save_dfs == True:
         combined_rpe_slope.to_csv(f"/results/data/{subject_id}/rpe_slope.csv")
 
     return nwbs_by_week_enriched, combined_rpe_slope
@@ -236,7 +229,9 @@ def add_sliding_window_corr(
     else:
         raise ValueError("Input 'nwb' must have a 'df_fip' attribute or be a DataFrame with fip data.")
 
-
+    if signal1name not in df_fip.event.unique() or signal2name not in df_fip.event.unique():
+        print("One or both signals not found in df_fip events. Skipping correlation.")
+        return nwb
    # Select and pivot the two signals directly (align by timestamp)
     df_sel = (
         df_fip.loc[df_fip['event'].isin([signal1name, signal2name]),

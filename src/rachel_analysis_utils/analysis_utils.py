@@ -23,7 +23,7 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
         slope = np.nan
     return (x_fit, y_fit, slope)
 
-output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel[:3]}_{alignment_event.split("_in_")[0]}"
+output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel.split('_dff')[0]}_{alignment_event.split('_in_')[0]}"
 
 def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'data_z_norm', 
                             alignment_event = 'choice_time_in_session',offsets = [0.33,1]):
@@ -55,7 +55,8 @@ def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'd
     subject_id = str(nwbs_by_week_enriched[0][0]).split(' ')[1].split('_')[0]
 
     for channel in all_channels:
-
+        if channel not in df_trials_all.columns:
+            continue
         avg_signal_col = output_col_name(channel, data_column, alignment_event)
 
         
@@ -290,7 +291,7 @@ def add_sliding_window_corr(
     r = r_full.to_numpy(dtype=float)[centers]
 
     df_corr = pd.DataFrame({'data_z':r, 'timestamps':t_centers})
-    df_corr['event'] = f'{signal1name[:3]}:{signal2name[:3]}_pearsonR'
+    df_corr['event'] = f'{signal1name.split('_dff')[0]}:{signal2name.split('_dff')[0]}_pearsonR'
 
     # If the entire correlation vector is NaN, nothing to merge — return unchanged.
     if np.all(np.isnan(r)):

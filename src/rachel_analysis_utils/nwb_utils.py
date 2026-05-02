@@ -54,6 +54,19 @@ def _actual_map_for_session(entry, date, correct_map):
         return misconnections[date]
     return correct_map
 
+def _get_df_trials_col_mapping(correct_mapping, cols):
+    col_mapping = {}
+
+    for key in correct_mapping.keys():
+        if not isinstance(key, str):
+            continue
+        pat = re.compile(re.escape(str(key)))
+        cols_to_change = [c for c in cols if pat.search(c)]
+        new_cols = [c.replace(key, correct_mapping[key]) for c in cols_to_change]
+        col_mapping.update(dict(zip(cols_to_change,new_cols)))
+
+    return col_mapping
+
 def _map_event_to_intended_measurement(event_str, session_map, correct_map):
     """
     Map an event string to intended area(s).
@@ -132,29 +145,28 @@ def _apply_channel_drops_to_nwb(nwb, entry, correct_map, drop_borderline=False):
             intended_drop_set.add(region)
 
     # Now remove rows in df_fip corresponding to intended_measurements to drop.
-    if hasattr(n, "df_fip") and isinstance(n.df_fip, pd.DataFrame) and intended_drop_set:
+    if intended_drop_set:
         df_fip = n.df_fip.copy()
+        df_trials = n.df_trials.copy()
         if "intended_measurement" in df_fip.columns:
             # keep rows whose intended_measurement is not in intended_drop_set
             keep_mask = ~df_fip["intended_measurement"].astype(str).isin({str(x) for x in intended_drop_set})
             n.df_fip = df_fip.loc[keep_mask].reset_index(drop=True)
-        elif "event" in df_fip.columns:
-            # fallback: map intended regions back to G_/R_ keys using correct_map
-            region_to_G = {v: k for k, v in (correct_map or {}).items()}
-            gkeys_to_drop = [region_to_G.get(r) for r in intended_drop_set if region_to_G.get(r)]
-            # also include any raw G_/R_ keys that were provided originally
-            gkeys_provided = [x for x in subject_drop_raw if isinstance(x, str) and (x.startswith("G_") or x.startswith("R_"))]
-            gkeys_all = sorted({*(k for k in gkeys_to_drop if k), *gkeys_provided}, key=len, reverse=True)
-            if gkeys_all:
-                pattern = r'(?:' + r'|'.join(re.escape(s) for s in gkeys_all) + r')'
-                keep_mask = ~df_fip["event"].astype(str).str.contains(pattern, regex=True, na=False)
-                n.df_fip = df_fip.loc[keep_mask].reset_index(drop=True)
-            else:
-                # no viable fallback keys: leave df_fip unchanged
-                n.df_fip = df_fip
-        else:
-            # no intended_measurement or event column -> cannot drop channel-specific rows
-            n.df_fip = df_fip
+
+        # set matching df_trials columns to NaN for each intended region to drop
+        for region in intended_drop_set:
+            if not isinstance(region, str):
+                continue
+            # match either raw region text or a sanitized variant used in column names
+            safe = re.sub(r'\W+', '_', region).strip('_')
+            pat_raw = re.compile(re.escape(region))
+            pat_safe = re.compile(re.escape(safe))
+            cols_to_null = [c for c in df_trials.columns if pat_raw.search(c) or pat_safe.search(c)]
+            if cols_to_null:
+                df_trials.loc[:, cols_to_null] = np.nan
+
+        # assign modified trials back
+        n.df_trials = df_trials
 
     return n
 def apply_curation_nwb_list(nwb_list, curation, drop_borderline = False):
@@ -190,13 +202,13 @@ def apply_curation_nwb_list(nwb_list, curation, drop_borderline = False):
 
         # annotate intended_measurement ONCE on a deepcopy before any drops
         nwb_annot = copy.deepcopy(nwb)
-        if hasattr(nwb_annot, "df_fip") and isinstance(nwb_annot.df_fip, pd.DataFrame):
-            df_fip = nwb_annot.df_fip.copy()
-            if "event" in df_fip.columns:
-                df_fip["intended_measurement"] = df_fip["event"].apply(lambda ev: _map_event_to_intended_measurement(ev, session_map, correct_map))
-            else:
-                df_fip["intended_measurement"] = np.nan
-            nwb_annot.df_fip = df_fip.reset_index(drop=True)
+        df_fip = nwb_annot.df_fip.copy()
+        df_fip["intended_measurement"] = df_fip["event"].apply(lambda ev: _map_event_to_intended_measurement(ev, session_map, correct_map))
+        nwb_annot.df_fip = df_fip.reset_index(drop=True)
+
+        df_trials = nwb_annot.df_trials.copy()
+        df_trials_col_map = _get_df_trials_col_mapping(session_map, df_trials.columns)
+        nwb_annot.df_trials = df_trials.rename(columns=df_trials_col_map)
 
         # now apply drops (these return deepcopy-modified objects)
         n_cur = _apply_channel_drops_to_nwb(nwb_annot, entry, correct_map, drop_borderline=False)
@@ -623,6 +635,7 @@ def get_date_and_week_interval(df, start_date):
     return week_interval_series
 
 def split_nwbs_by_week(nwbs_all):
+
     nwbs_by_week = []
     nwb_week_i = []
     curr_week = 1
@@ -748,6 +761,12 @@ def get_nwb_processed(file_locations, **parameters) -> None:
         warnings.warn(f"channels {interested_channels} not found in df_fip.")
         df_fip_final = df_fip
         df_trials_final = df_trials 
+
+    # remove preprocessing suffix from df_trials
+    if parameters['preprocessing'] != "raw":
+        suffix = '_' + parameters['preprocessing']
+        df_trials_final = df_trials_final.rename(columns=lambda c: c.replace(suffix, '') if c.startswith('data') else c)
+
     # add week intervals
     df_sess_fm, df_trials_final, df_events, df_fip_final = enrich_nwb_by_week(df_sess_fm, df_trials_final, df_events, df_fip_final)
     # return all dataframes

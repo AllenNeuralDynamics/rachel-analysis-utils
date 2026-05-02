@@ -173,19 +173,14 @@ def apply_curation_nwb_list(nwb_list, curation, drop_borderline = False):
       - Annotates nwb.df_fip with 'intended_measurement' ONCE before applying drops.
       - intended_measurement uses per-session misconnect_fixes if available, otherwise correct_mapping.
     """
-    # flatten input
-    flat = [
-        nwb
-        for item in (nwb_list if isinstance(nwb_list, list) else [nwb_list])
-        for nwb in (item if isinstance(item, list) else [item])
-    ]
+    
 
     correct_map = curation.get("correct_mapping", {}) or {}
 
     curated = []
     curated_with_borderline = []
 
-    for nwb in flat:
+    for nwb in nwb_list:
         ses_idx = getattr(nwb, "session_id", "")
         subject, date = _parse_session_id(ses_idx)
         entry = curation.get(str(subject), {}) or {}
@@ -643,7 +638,7 @@ def split_nwbs_by_week(nwbs_all):
 
     return nwbs_by_week
 
-def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
+def enrich_nwb_by_week(df_sess, df_trials, df_events, df_fip):
     start_date = pd.to_datetime(df_sess['session_date'].min())
 
     df_sess['week_interval'] = get_date_and_week_interval(df_sess, start_date)
@@ -651,6 +646,12 @@ def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
     df_events['week_interval'] = get_date_and_week_interval(df_events, start_date)
     df_fip['week_interval'] = get_date_and_week_interval(df_fip, start_date)
 
+    return (df_sess, df_trials, df_events, df_fip)
+
+def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
+
+    if 'week_interval' not in df_sess:
+        df_sess, df_trials, df_events, df_fip = enrich_nwb_by_week(df_sess, df_trials, df_events, df_fip)
     week_interval_list = df_trials.week_interval.unique()
     dummy_nwbs_list = []
     for week_interval in week_interval_list:
@@ -747,6 +748,7 @@ def get_nwb_processed(file_locations, **parameters) -> None:
         warnings.warn(f"channels {interested_channels} not found in df_fip.")
         df_fip_final = df_fip
         df_trials_final = df_trials 
-    
+    # add week intervals
+    df_sess_fm, df_trials_final, df_events, df_fip_final = enrich_nwb_by_week(df_sess_fm, df_trials_final, df_events, df_fip_final)
     # return all dataframes
     return (df_sess_fm, df_trials_final, df_events, df_fip_final) 

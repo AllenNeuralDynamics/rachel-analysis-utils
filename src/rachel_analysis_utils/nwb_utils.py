@@ -61,6 +61,8 @@ def _get_df_trials_col_mapping(correct_mapping, cols):
     for key in correct_mapping.keys():
         if not isinstance(key, str):
             continue
+        if correct_mapping[key] == 'no_fiber':
+            continue
         pat = re.compile(re.escape(str(key)))
         cols_to_change = [c for c in cols if pat.search(c)]
         new_cols = [c.replace(key, correct_mapping[key]) for c in cols_to_change]

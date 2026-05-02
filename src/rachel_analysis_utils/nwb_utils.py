@@ -5,6 +5,7 @@ import glob
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import json
 
 from aind_dynamic_foraging_data_utils import nwb_utils, enrich_dfs
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
@@ -489,7 +490,7 @@ class dummy_nwb:
 
         return obj
 
-def save_nwb_list(flat_dummy_nwbs, plot_loc, df_sess=None):
+def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
     """
     Save a list or list-of-lists of dummy_nwb objects.
 
@@ -524,6 +525,16 @@ def save_nwb_list(flat_dummy_nwbs, plot_loc, df_sess=None):
         df_sess.to_csv(
             Path(plot_loc) / f"df_sess_{suffix}.csv"
         )
+    if df_curation is not None:
+        print(f"now saving df_curation")
+        try:
+            with open(Path(plot_loc) / "df_curation.json", "w") as fh:
+                json.dump(df_curation, fh, indent=2, default=str)
+        except TypeError:
+            # fallback: stringify non-serializable values
+            serializable = {k: str(v) for k, v in (df_curation.items() if isinstance(df_curation, dict) else [])}
+            with open(Path(plot_loc) / "df_curation.json", "w") as fh:
+                json.dump(serializable, fh, indent=2, ensure_ascii=False)
 
 
 def load_nwb_list(plot_loc, load_fip = False):

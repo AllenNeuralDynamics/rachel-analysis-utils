@@ -685,50 +685,50 @@
         "R_3": "NAc(L)-rAch"
       },
       "2025-11-13": {
-        "G_0": "NAc(L)-dLight",
+        "G_0": "PL(R)-Gcamp",
         "G_1": "PL(L)-Gcamp",
-        "G_2": "PL(R)-Gcamp",
-        "G_3": "NAc(R)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
         "R_0": "no_fiber",
         "R_1": "no_fiber",
         "R_2": "NAc(R)-rAch",
         "R_3": "NAc(L)-rAch"
       },
       "2025-11-14": {
-        "G_0": "NAc(L)-dLight",
+        "G_0": "PL(R)-Gcamp",
         "G_1": "PL(L)-Gcamp",
-        "G_2": "PL(R)-Gcamp",
-        "G_3": "NAc(R)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
         "R_0": "no_fiber",
         "R_1": "no_fiber",
         "R_2": "NAc(R)-rAch",
         "R_3": "NAc(L)-rAch"
       },
       "2025-11-17": {
-        "G_0": "NAc(L)-dLight",
+        "G_0": "PL(R)-Gcamp",
         "G_1": "PL(L)-Gcamp",
-        "G_2": "PL(R)-Gcamp",
-        "G_3": "NAc(R)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
         "R_0": "no_fiber",
         "R_1": "no_fiber",
         "R_2": "NAc(R)-rAch",
         "R_3": "NAc(L)-rAch"
       },
       "2025-11-20": {
-        "G_0": "NAc(L)-dLight",
+        "G_0": "PL(R)-Gcamp",
         "G_1": "PL(L)-Gcamp",
-        "G_2": "PL(R)-Gcamp",
-        "G_3": "NAc(R)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
         "R_0": "no_fiber",
         "R_1": "no_fiber",
         "R_2": "NAc(R)-rAch",
         "R_3": "NAc(L)-rAch"
       },
       "2025-11-21": {
-        "G_0": "NAc(L)-dLight",
+        "G_0": "PL(R)-Gcamp",
         "G_1": "PL(L)-Gcamp",
-        "G_2": "PL(R)-Gcamp",
-        "G_3": "NAc(R)-dLight",
+        "G_2": "NAc(R)-dLight",
+        "G_3": "NAc(L)-dLight",
         "R_0": "no_fiber",
         "R_1": "no_fiber",
         "R_2": "NAc(R)-rAch",
@@ -736,7 +736,7 @@
       }
     },
     "drop_channels": ["G_0"],
-    "drop_sessions": [],
+    "drop_sessions": ["2025-10-24", "2025-10-29", "2025-10-30"],
     "drop_sessions_channels": {}
   },
     "809487": {

@@ -26,15 +26,17 @@
         "drop_channels": [
             "G_0", "R_0", "R_2", "G_2"
         ],
-        "drop_sessions": [
+        "drop_sessions": [],
+        "borderline_drop": [],
+        "drop_sessions_channels": {
+            "R_1":[
             "2025-08-29",
             "2025-08-28",
             "2025-08-17",
             "2025-08-22",
             "2025-09-05"
-        ],
-        "borderline_drop": [],
-        "drop_sessions_channels": {},
+        ]
+        },
         "borderline_drop_sessions_channels": {
             "R_1": [
                 "2025-09-04",
@@ -49,12 +51,34 @@
     "802292": {
         "notes": "Drop all",
 
-        "drop_all": true,
+        "drop_all": false,
         "misconnect_fixes": {},
-        "drop_channels": [],
+        "drop_channels": ["G_0", "G_2","R_0", "R_1","R_2"],
         "drop_sessions": [],
         "borderline_drop": [],
-        "drop_sessions_channels": {},
-        "borderline_drop_sessions_channels": {}
+        "drop_sessions_channels": {
+            "G_1":[
+            "2025-09-04",
+            "2025-09-05"
+        ]
+        },
+        "borderline_drop_sessions_channels": {
+            "G_1":[
+                "2025-08-05",
+                "2025-08-07",
+                "2025-08-11",
+                "2025-08-13",
+                "2025-08-14",
+                "2025-08-15",
+                "2025-08-18",
+                "2025-08-19",
+                "2025-08-22",
+                "2025-08-25",
+                "2025-08-26",
+                "2025-08-27",
+                "2025-08-28",
+                "2025-08-29"
+            ]
+        }
     }
 }

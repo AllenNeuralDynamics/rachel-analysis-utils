@@ -664,6 +664,16 @@ def split_nwbs_by_week(nwbs_all):
 
     return nwbs_by_week
 
+def split_nwbs_by_subject(nwbs_all):
+    nwbs_by_subject = {}
+    for nwb in nwbs_all:
+        subject_id = nwb.session_id.split('_')[0]
+        if subject_id not in nwbs_by_subject:
+            nwbs_by_subject[subject_id] = []
+        nwbs_by_subject[subject_id].append(nwb)
+
+    return nwbs_by_subject
+
 def enrich_nwb_by_week(df_sess, df_trials, df_events, df_fip):
     start_date = pd.to_datetime(df_sess['session_date'].min())
 

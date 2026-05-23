@@ -519,23 +519,24 @@ def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
         print(f'now saving {nwb.session_id}')
         nwb.save(subject_folder)
 
+    subject_ids_sorted = sorted(subject_ids)
+    suffix = "_".join(subject_ids_sorted)
+
     # save optional df_sess once per subject
     if df_sess is not None:
         print(f"now saving df_sess")
-        subject_ids_sorted = sorted(subject_ids)
-        suffix = "_".join(subject_ids_sorted)
         df_sess.to_csv(
             Path(plot_loc) / f"df_sess_{suffix}.csv"
         )
     if df_curation is not None:
         print(f"now saving df_curation")
         try:
-            with open(Path(plot_loc) / "df_curation.json", "w") as fh:
+            with open(Path(plot_loc) / f"df_curation_{suffix}.json", "w") as fh:
                 json.dump(df_curation, fh, indent=2, default=str)
         except TypeError:
             # fallback: stringify non-serializable values
             serializable = {k: str(v) for k, v in (df_curation.items() if isinstance(df_curation, dict) else [])}
-            with open(Path(plot_loc) / "df_curation.json", "w") as fh:
+            with open(Path(plot_loc) / f"df_curation_{suffix}.json", "w") as fh:
                 json.dump(serializable, fh, indent=2, ensure_ascii=False)
 
 

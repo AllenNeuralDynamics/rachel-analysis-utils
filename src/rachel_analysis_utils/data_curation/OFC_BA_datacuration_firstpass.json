@@ -1,0 +1,15 @@
+{
+    "project": "OFC/BA",
+
+
+    "correct_mapping":     {
+        "G_0":"OFC-5-HT",
+        "G_1":"OFC-nLight",
+        "G_2":"BA-5-HT",
+        "G_3":"BA-nLight",
+        "R_0":"OFC-rAch",
+        "R_1":"OFC-rDA",
+        "R_2":"BA-rAch",
+        "R_3":"BA-rDA"}
+
+}

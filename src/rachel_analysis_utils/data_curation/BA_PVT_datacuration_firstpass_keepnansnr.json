@@ -5,8 +5,8 @@
         "G_1": "BA-5-HT",
         "G_2": "PVT-nLight",
         "R_0": "BA-rDA",
-        "R_1": "BA-Ach",
-        "R_2": "PVT-rAch"
+        "R_1": "BA-rAch",
+        "R_2": "PVT-rDA"
     },
     "example_session_chosen": "behavior_802291_2025-09-04",
     "802290": {

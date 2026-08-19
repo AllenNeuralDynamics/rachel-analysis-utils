@@ -1,5 +1,5 @@
 {
-    "project": "BA/PVT",
+    "name": "BA/PVT first pass with correct mapping",
     "correct_mapping": {
         "G_0": "BA-nLight",
         "G_1": "BA-5-HT",

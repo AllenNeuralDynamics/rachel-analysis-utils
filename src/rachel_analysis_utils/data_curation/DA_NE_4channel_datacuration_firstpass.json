@@ -1,4 +1,5 @@
 {
+  "name":"correct mapping and misconnect fixes",
   "correct_mapping": {
     "G_0": "PL(L)-Gcamp",
     "G_1": "PL(R)-Gcamp",

@@ -1,7 +1,7 @@
 {
-  "name":{
+  "name":
     "data curation second pass for square signal p values"
-  },
+  ,
   "808054": {
     "borderline_drop_sessions_channels": {
       "G_2": [

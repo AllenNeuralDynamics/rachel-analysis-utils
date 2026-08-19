@@ -1,5 +1,5 @@
 {
-    "project": "BA/PVT",
+    "name": "BA/PVT first pass that allows for nan values if the variability is big enough",
     "correct_mapping": {
         "G_0": "BA-nLight",
         "G_1": "BA-5-HT",

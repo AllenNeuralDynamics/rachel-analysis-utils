@@ -1,5 +1,5 @@
 {
-    "project": "CeA",
+    "name": "CeA",
     "correct_mapping": {
         "G_0": "CeA(L)-dLight",
         "G_1": "CeA(R)-5-HT",

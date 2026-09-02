@@ -461,7 +461,7 @@ class dummy_nwb:
             if isinstance(val, pd.DataFrame):
                 # print(f"now saving {attr}")
 
-                if attr == "df_events":
+                if attr == "df_events" and "data" in val.columns:
                     val["data"] = val["data"].astype(str)
                 
                 # df = self.convert_df_to_saveable_format(val)

@@ -2,6 +2,7 @@
 
 import warnings
 import glob
+import logging
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -10,10 +11,14 @@ import json
 from aind_dynamic_foraging_data_utils import nwb_utils, enrich_dfs
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 
+from rachel_analysis_utils import data_curation_helpers
 
 
-import copy 
+
+import copy
 import re
+
+logger = logging.getLogger(__name__)
 
 def pick_side(side_pos, seg_bounds, per_seg_min):
     if len(side_pos) == 0 or per_seg_min == 0:
@@ -439,7 +444,21 @@ def attach_dfs(nwb_file):
     return nwb_file
 
 
-def get_nwb_processed(file_locations, **parameters) -> None:
+def split_fiber(df_fip, preprocessing):
+    """
+    Split df_fip['event'] into 'patch_cord' ('G_0') and 'preprocessing' columns.
+
+    get_all_df_for_nwb filters to channels built by appending the preprocessing
+    suffix, so every event carries it and the split is exact.
+    """
+    suffix = "" if preprocessing == "raw" else f"_{preprocessing}"
+    df_fip = df_fip.copy()
+    df_fip["patch_cord"] = df_fip["event"].str.removesuffix(suffix)
+    df_fip["preprocessing"] = preprocessing
+    return df_fip
+
+
+def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
     interested_channels = list(parameters["channels"].keys())
     if parameters['preprocessing'] != "raw":
         interested_channels = [channel + '_' + parameters['preprocessing'] for channel in interested_channels]
@@ -465,7 +484,19 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
-        
+    if len(df_fip):
+        df_fip = split_fiber(df_fip, parameters['preprocessing'])
+        if curation is not None:
+            logger.info("Curation provided: the intended measurements in parameters['channels'] "
+                        "are ignored in favor of the CSV's targets.")
+            df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
+
+            # sessions left with no fibers would otherwise linger in df_sess while
+            # get_dummy_nwbs skips them, so drop them here to keep the two in step
+            kept_sessions = set(df_fip['ses_idx'].unique())
+            df_sess = df_sess[df_sess['ses_idx'].isin(kept_sessions)]
+            df_trials = df_trials[df_trials['ses_idx'].isin(kept_sessions)]
+
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):

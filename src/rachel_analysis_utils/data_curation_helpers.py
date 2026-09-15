@@ -1,6 +1,5 @@
 """Load fiber curation CSVs and apply them to FIP data."""
 
-import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +19,11 @@ def _to_ses_idx(session_id):
     return ses.rsplit("_", 1)[0]
 
 
+def _to_nwb_suffix(session_id):
+    """'behavior_808054_2025-09-02_10-38-37' -> 103837, matching df_sess's nwb_suffix."""
+    return int(str(session_id).rsplit("_", 1)[-1].replace("-", ""))
+
+
 def load_curation(csv_path):
     """
     Read a fiber curation results CSV, keyed to ses_idx.
@@ -28,30 +32,44 @@ def load_curation(csv_path):
         'bilateral_4_channels/curation_results/bilateral_4_channels_results'
         (the _G variant covers only G fibers)
 
-    Returns columns ses_idx, patch_cord, target, keep. A fiber with no intended
-    measurement -- NaN or the literal 'no_fiber', both appear -- gets target NA.
+    Returns columns ses_idx, nwb_suffix, patch_cord, target, keep. A fiber with no
+    intended measurement -- NaN or the literal 'no_fiber', both appear -- gets target NA.
 
-    Sessions recorded twice in a day share one ses_idx, so their rows merge:
-    targets must agree, and keep is ANDed so an ambiguous fiber is excluded.
+    Sessions recorded twice in a day share a ses_idx, so rows stay keyed by
+    nwb_suffix too; get_nwb_processed narrows them to the recording it loaded.
     """
     raw = pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv"))
 
-    df = pd.DataFrame({
+    return pd.DataFrame({
         "ses_idx": raw["session_id"].map(_to_ses_idx),
+        "nwb_suffix": raw["session_id"].map(_to_nwb_suffix),
         "patch_cord": raw["fiber"],
         "target": raw["target"].where(raw["target"].notna() & (raw["target"] != NO_FIBER)),
         "keep": raw["keep"].astype(bool),
     })
 
-    conflicting = df.groupby(["ses_idx", "patch_cord"])["target"].nunique(dropna=False) > 1
-    if conflicting.any():
-        bad = sorted({ses for ses, _ in conflicting[conflicting].index})
-        warnings.warn(f"Conflicting targets for {bad} once the session timestamp is dropped; excluding them.")
-        df = df[~df["ses_idx"].isin(bad)]
 
-    return df.groupby(["ses_idx", "patch_cord"], as_index=False).agg(
-        target=("target", "first"), keep=("keep", "all")
-    )
+def drop_unchosen_recordings(curation, df_sess):
+    """
+    Drop curation rows for recordings that were not the one loaded.
+
+    A day recorded more than once gives every fiber one row per nwb_suffix, which
+    would make the (ses_idx, patch_cord) key apply_curation_df_fip looks up
+    non-unique. The CSV carries both regardless of how many nwbs were dispatched,
+    so this runs whether or not df_sess itself had duplicates.
+
+    Rows for sessions absent from df_sess are left untouched.
+    """
+    if curation is None:
+        return None
+
+    chosen = df_sess[["ses_idx", "nwb_suffix"]].astype({"nwb_suffix": int})
+    chosen_map = dict(chosen.values)
+    ses = curation["ses_idx"]
+    loaded = ses.isin(chosen_map)
+    matches = ses.map(chosen_map).eq(curation["nwb_suffix"])
+
+    return curation[~loaded | matches]
 
 
 def apply_curation_df_fip(df_fip, curation):
@@ -69,7 +87,10 @@ def apply_curation_df_fip(df_fip, curation):
     patch_cord = df_fip["patch_cord"]
     curatable = patch_cord.str.fullmatch(CURATABLE_PATCH_CORD, na=False)
 
-    lookup = curation.set_index(["ses_idx", "patch_cord"])
+    # curation keeps rows for sessions that were never loaded, and those can still
+    # hold a row per recording, so scope the lookup to what df_fip actually needs
+    lookup = curation[curation["ses_idx"].isin(df_fip["ses_idx"].unique())]
+    lookup = lookup.set_index(["ses_idx", "patch_cord"])
     keys = pd.MultiIndex.from_arrays([df_fip["ses_idx"], patch_cord.where(curatable)])
 
     absent = curatable & ~pd.Series(keys.isin(lookup.index), index=df_fip.index)

@@ -473,6 +473,10 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
         df_sess = (df_sess.sort_values(by=['ses_idx','finished_trials'], ascending=False)
                          .drop_duplicates(subset=['ses_idx'], keep='first')
                   )
+    # the curation CSV holds a row per recording regardless of what was dispatched,
+    # so narrow it to the recordings kept above even when df_sess had no duplicates
+    curation = data_curation_helpers.drop_unchosen_recordings(curation, df_sess)
+
     # sort sessions
     df_sess = (df_sess.sort_values(by=['session_date']) 
                          .reset_index(drop=True)
@@ -489,6 +493,7 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
         if curation is not None:
             logger.info("Curation provided: the intended measurements in parameters['channels'] "
                         "are ignored in favor of the CSV's targets.")
+
             df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
 
             # sessions left with no fibers would otherwise linger in df_sess while

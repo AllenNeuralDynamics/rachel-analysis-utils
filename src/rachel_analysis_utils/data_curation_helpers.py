@@ -7,7 +7,10 @@ from aind_bwnm_fiber_data_curation_utils import data as _curation_data
 
 # the data/ subpackage ships an __init__.py, so this follows the install location
 CURATION_DATA_DIR = Path(_curation_data.__file__).parent
-CURATABLE_PATCH_CORD = r"(G|R|Iso)_\d+"
+# Iso is the isosbestic control channel and carries no intended measurement, so no
+# curation CSV has rows for it. Leaving it out here passes it through untouched rather
+# than tripping the missing-coverage check in apply_curation_df_fip.
+CURATABLE_PATCH_CORD = r"(G|R)_\d+"
 NO_FIBER = "no_fiber"
 
 
@@ -81,8 +84,9 @@ def apply_curation_df_fip(df_fip, curation):
     BEFORE enrich_fip_in_df_trials so the df_trials columns are built from the
     target names and need no second rename.
 
-    Raises if a loaded fiber has no curation row -- curation is expected to cover
-    everything requested, so absence is a mistake rather than a silent drop.
+    Raises if a loaded curatable fiber has no curation row -- curation is expected to
+    cover everything requested, so absence is a mistake rather than a silent drop. Iso is
+    not curatable and passes through with its patch cord as the event name.
     """
     patch_cord = df_fip["patch_cord"]
     curatable = patch_cord.str.fullmatch(CURATABLE_PATCH_CORD, na=False)

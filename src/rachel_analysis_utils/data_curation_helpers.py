@@ -43,13 +43,14 @@ def load_curation(csv_path):
     """
     raw = pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv"))
 
-    return pd.DataFrame({
+    shortened = pd.DataFrame({
         "ses_idx": raw["session_id"].map(_to_ses_idx),
         "nwb_suffix": raw["session_id"].map(_to_nwb_suffix),
         "patch_cord": raw["fiber"],
         "target": raw["target"].where(raw["target"].notna() & (raw["target"] != NO_FIBER)),
         "keep": raw["keep"].astype(bool),
     })
+    return shortened, raw
 
 
 def drop_unchosen_recordings(curation, df_sess):

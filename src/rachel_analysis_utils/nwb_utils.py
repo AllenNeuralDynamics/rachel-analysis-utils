@@ -208,14 +208,11 @@ def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
         )
     if df_curation is not None:
         print(f"now saving df_curation")
-        try:
-            with open(Path(plot_loc) / f"df_curation_{suffix}.json", "w") as fh:
-                json.dump(df_curation, fh, indent=2, default=str)
-        except TypeError:
-            # fallback: stringify non-serializable values
-            serializable = {k: str(v) for k, v in (df_curation.items() if isinstance(df_curation, dict) else [])}
-            with open(Path(plot_loc) / f"df_curation_{suffix}.json", "w") as fh:
-                json.dump(serializable, fh, indent=2, ensure_ascii=False)
+        df_curation.to_csv(
+            Path(plot_loc) / f"df_curation_{suffix}.csv",
+            index=False,
+        )
+
 
 
 def load_nwb_list(plot_loc, load_fip = False):

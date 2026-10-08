@@ -102,7 +102,9 @@ def enrich_df_trials(df_trials):
     # get RPE binned columns. 
     RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,0.99,1/3)]
 
-    bins = np.arange(-1,1.01,1/3)
+    # linspace gives an exact 0 edge (arange gives -2e-16), so RPE == 0 falls in (-1/3, 0]
+    bins = np.linspace(-1,1,7)
+    bins[0] = -1.001  # include RPE == -1 (right-inclusive bins would otherwise drop it)
     bins[-1] = 1.001
 
     df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_earned'],# all versus earned not a huge difference

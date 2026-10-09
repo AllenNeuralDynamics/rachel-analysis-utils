@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from aind_bwnm_fiber_data_curation_utils import data as _curation_data
 
@@ -35,22 +36,18 @@ def load_curation(csv_path):
         'bilateral_4_channels/curation_results/bilateral_4_channels_results'
         (the _G variant covers only G fibers)
 
-    Returns columns ses_idx, nwb_suffix, patch_cord, target, keep. A fiber with no
-    intended measurement -- NaN or the literal 'no_fiber', both appear -- gets target NA.
+    Returns the CSV's own columns, unchanged so the table can be saved back out, plus
+    ses_idx, nwb_suffix, and p_value_delay (NaN until add_delay_pvalue fills it).
 
     Sessions recorded twice in a day share a ses_idx, so rows stay keyed by
     nwb_suffix too; get_nwb_processed narrows them to the recording it loaded.
     """
-    raw = pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv"))
-
-    shortened = pd.DataFrame({
-        "ses_idx": raw["session_id"].map(_to_ses_idx),
-        "nwb_suffix": raw["session_id"].map(_to_nwb_suffix),
-        "patch_cord": raw["fiber"],
-        "target": raw["target"].where(raw["target"].notna() & (raw["target"] != NO_FIBER)),
-        "keep": raw["keep"].astype(bool),
-    })
-    return shortened, raw
+    curation = pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv"))
+    curation["ses_idx"] = curation["session_id"].map(_to_ses_idx)
+    curation["nwb_suffix"] = curation["session_id"].map(_to_nwb_suffix)
+    curation["keep"] = curation["keep"].astype(bool)
+    curation["p_value_delay"] = np.nan
+    return curation
 
 
 def drop_unchosen_recordings(curation, df_sess):
@@ -95,7 +92,7 @@ def apply_curation_df_fip(df_fip, curation):
     # curation keeps rows for sessions that were never loaded, and those can still
     # hold a row per recording, so scope the lookup to what df_fip actually needs
     lookup = curation[curation["ses_idx"].isin(df_fip["ses_idx"].unique())]
-    lookup = lookup.set_index(["ses_idx", "patch_cord"])
+    lookup = lookup.set_index(["ses_idx", "fiber"])
     keys = pd.MultiIndex.from_arrays([df_fip["ses_idx"], patch_cord.where(curatable)])
 
     absent = curatable & ~pd.Series(keys.isin(lookup.index), index=df_fip.index)
@@ -106,7 +103,10 @@ def apply_curation_df_fip(df_fip, curation):
             "Curation must cover every channel requested in parameters['channels']."
         )
 
+    # a fiber with no intended measurement -- NaN or the literal 'no_fiber', both
+    # appear -- gets target NA, so it is dropped below
     target = pd.Series(lookup["target"].reindex(keys).to_numpy(), index=df_fip.index)
+    target = target.where(target != NO_FIBER)
     keep = pd.Series(lookup["keep"].reindex(keys).to_numpy(), index=df_fip.index).eq(True)
 
     selected = ~curatable | (keep & target.notna())

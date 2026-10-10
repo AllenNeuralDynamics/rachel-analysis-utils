@@ -492,6 +492,10 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
                         "are ignored in favor of the CSV's targets.")
 
             df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
+            # test only the fibers that passed the fiber metrics, then re-apply so the
+            # square-pulse fibers it marks keep=False are removed as well
+            curation = data_curation_helpers.add_delay_pvalue(curation, df_fip, df_events, df_sess)
+            df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
 
             # sessions left with no fibers would otherwise linger in df_sess while
             # get_dummy_nwbs skips them, so drop them here to keep the two in step
@@ -516,5 +520,6 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
 
     # add week intervals
     df_sess_fm, df_trials_final, df_events, df_fip_final = enrich_nwb_by_week(df_sess_fm, df_trials_final, df_events, df_fip_final)
-    # return all dataframes
-    return (df_sess_fm, df_trials_final, df_events, df_fip_final) 
+    # return all dataframes, plus curation narrowed to the loaded recordings and
+    # carrying p_value_delay (None when no curation was given)
+    return (df_sess_fm, df_trials_final, df_events, df_fip_final, curation)

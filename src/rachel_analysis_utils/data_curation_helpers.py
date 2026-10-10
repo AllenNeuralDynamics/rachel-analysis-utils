@@ -1,10 +1,13 @@
 """Load fiber curation CSVs and apply them to FIP data."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import wilcoxon
 from aind_bwnm_fiber_data_curation_utils import data as _curation_data
+from aind_dynamic_foraging_data_utils import nwb_utils
 
 # the data/ subpackage ships an __init__.py, so this follows the install location
 CURATION_DATA_DIR = Path(_curation_data.__file__).parent
@@ -13,6 +16,11 @@ CURATION_DATA_DIR = Path(_curation_data.__file__).parent
 # than tripping the missing-coverage check in apply_curation_df_fip.
 CURATABLE_PATCH_CORD = r"(G|R)_\d+"
 NO_FIBER = "no_fiber"
+# a fiber whose signal steps at a fixed delay before the go cue is carrying a square
+# pulse artifact rather than a neural signal
+PVALUE_DELAY_THRESH = 1e-10
+DELAY_DROPPED_BY = "delay_pvalue_curation"
+DELAY_DROP_REASON = "square_pulse"
 
 
 def _to_ses_idx(session_id):
@@ -114,3 +122,84 @@ def apply_curation_df_fip(df_fip, curation):
     out = df_fip.loc[selected].copy()
     out["event"] = target[selected].fillna(patch_cord[selected])
     return out.reset_index(drop=True)
+
+
+def compute_p_values_delay(nwbfile, GoCueTime, patch_cords, pre=40, post=80, delay=0.5):
+    """
+    Wilcoxon p-value per patch cord ('G_0', 'R_2', ...) for a step in the signal
+    `delay` s before the go cue.
+
+    Assumes 20 Hz sampling, so pre/post are in frames. GoCueTime must be on the nwb's
+    own clock (df_events 'raw_timestamps'). Returns a Series indexed by patch cord; one
+    that cannot be computed is NaN.
+    """
+    p_values_delay = pd.Series(np.nan, index=list(patch_cords), dtype=float)
+    delay_in_frames = int(np.round(delay * 20))
+    for patch_cord in p_values_delay.index:
+        try:
+            ts = nwbfile.acquisition[patch_cord].timestamps[:]
+            data = nwbfile.acquisition[patch_cord].data[:]
+            inds = [
+                np.argmin(np.abs(ts - go))
+                for go in GoCueTime
+                if ts[pre] <= go <= ts[-post]
+            ]
+            if not inds:
+                raise Exception("No GoCue occurs within timestamps")
+            snippets = np.array(
+                [data[i - pre : i + post] for i in inds if i <= len(data) - post]
+            )
+            snippets -= snippets[:, pre - 10 : pre].mean(1)[:, None]
+            snippets -= snippets[
+                :, pre - delay_in_frames - 10 : pre - delay_in_frames
+            ].mean(1)[:, None]
+            p_values_delay[patch_cord] = wilcoxon(
+                snippets[:, pre - delay_in_frames : pre - delay_in_frames + 10].mean(1)
+            ).pvalue
+        except Exception as e:
+            logging.error(f"Error computing delay p-value for {patch_cord}: {e}")
+    return p_values_delay
+
+
+def add_delay_pvalue(curation, df_fip, df_events, df_sess, pvalue_thresh=PVALUE_DELAY_THRESH):
+    """
+    Fill p_value_delay for every curatable fiber left in df_fip, and drop (keep=False,
+    with dropped_by/drop_reason recorded) those below pvalue_thresh as square pulses.
+
+    Run on df_fip AFTER apply_curation_df_fip, so only fibers that passed the fiber
+    metrics are tested and the nwbs reloaded here are limited to those sessions;
+    re-apply apply_curation_df_fip afterwards to remove the new drops. A NaN p-value
+    leaves the fiber kept.
+
+    Go cues come from df_events' raw_timestamps, which share the nwb's own clock;
+    the 'timestamps' column is shifted so the first go cue is t=0.
+
+    Returns a copy; curation itself is not modified.
+    """
+    # dropped_by/drop_reason read in as all-NaN floats when nothing was dropped
+    curation = curation.astype({"dropped_by": object, "drop_reason": object})
+    fibers = df_fip.loc[
+        df_fip["patch_cord"].str.fullmatch(CURATABLE_PATCH_CORD, na=False),
+        ["ses_idx", "patch_cord"],
+    ].drop_duplicates()
+
+    for ses_idx, ses_fibers in fibers.groupby("ses_idx"):
+        sess = df_sess[df_sess["ses_idx"] == ses_idx].iloc[0]
+        nwb = nwb_utils.load_nwb_from_filename(sess["s3_location"])
+        ses_events = df_events[df_events["ses_idx"] == ses_idx]
+        go_cue = ses_events.query("event == 'goCue_start_time'")["raw_timestamps"].values
+
+        p_values = compute_p_values_delay(nwb, go_cue, ses_fibers["patch_cord"])
+        # match nwb_suffix too, in case curation still holds the day's other recording
+        rows = (
+            (curation["ses_idx"] == ses_idx)
+            & (curation["nwb_suffix"] == int(sess["nwb_suffix"]))
+            & curation["fiber"].isin(p_values.index)
+        )
+        curation.loc[rows, "p_value_delay"] = curation.loc[rows, "fiber"].map(p_values)
+
+    square_pulse = curation["p_value_delay"] < pvalue_thresh
+    curation.loc[square_pulse, "keep"] = False
+    curation.loc[square_pulse, "dropped_by"] = DELAY_DROPPED_BY
+    curation.loc[square_pulse, "drop_reason"] = DELAY_DROP_REASON
+    return curation

@@ -470,9 +470,12 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
         df_sess = (df_sess.sort_values(by=['ses_idx','finished_trials'], ascending=False)
                          .drop_duplicates(subset=['ses_idx'], keep='first')
                   )
-    # the curation CSV holds a row per recording regardless of what was dispatched,
-    # so narrow it to the recordings kept above even when df_sess had no duplicates
-    curation = data_curation_helpers.drop_unchosen_recordings(curation, df_sess)
+    if curation is not None:
+        # the curation CSV holds a row per recording regardless of what was dispatched,
+        # so narrow it to the recordings kept above even when df_sess had no duplicates
+        curation = data_curation_helpers.drop_unchosen_recordings(curation, df_sess)
+        # df_sess already carries ignore_rate, so disengaged sessions go before any trials load
+        curation, df_sess = data_curation_helpers.drop_high_ignore_sessions(curation, df_sess)
 
     # sort sessions
     df_sess = (df_sess.sort_values(by=['session_date']) 

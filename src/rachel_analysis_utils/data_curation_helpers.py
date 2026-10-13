@@ -21,6 +21,8 @@ NO_FIBER = "no_fiber"
 PVALUE_DELAY_THRESH = 1e-10
 DELAY_DROPPED_BY = "delay_pvalue_curation"
 DELAY_DROP_REASON = "square_pulse"
+# sessions where the animal ignored more than this fraction of trials are too disengaged
+IGNORE_RATE_THRESH = 0.40
 
 
 def _to_ses_idx(session_id):
@@ -69,9 +71,6 @@ def drop_unchosen_recordings(curation, df_sess):
 
     Rows for sessions absent from df_sess are left untouched.
     """
-    if curation is None:
-        return None
-
     chosen = df_sess[["ses_idx", "nwb_suffix"]].astype({"nwb_suffix": int})
     chosen_map = dict(chosen.values)
     ses = curation["ses_idx"]
@@ -79,6 +78,34 @@ def drop_unchosen_recordings(curation, df_sess):
     matches = ses.map(chosen_map).eq(curation["nwb_suffix"])
 
     return curation[~loaded | matches]
+
+
+def drop_high_ignore_sessions(curation, df_sess, max_ignore_rate=IGNORE_RATE_THRESH):
+    """
+    Drop sessions whose df_sess['ignore_rate'] exceeds max_ignore_rate. Expects a
+    curation; callers skip this when none is in use.
+
+    Returns (curation, df_sess). Curation rows of the dropped sessions that were still
+    kept get keep=False, dropped_by='high_ignore_rate', and the session's ignore rate as
+    drop_reason; rows already dropped by an earlier step keep their own reason. Neither
+    input is modified.
+    """
+    high = df_sess["ignore_rate"] > max_ignore_rate
+    if not high.any():
+        return curation, df_sess
+
+    rates = df_sess.loc[high].set_index("ses_idx")["ignore_rate"]
+    logging.info(f"Dropping {len(rates)} session(s) with ignore_rate > {max_ignore_rate}: "
+                 f"{rates.round(3).to_dict()}")
+
+    curation = curation.astype({"dropped_by": object, "drop_reason": object})
+    rows = curation["ses_idx"].isin(rates.index) & curation["keep"]
+    curation.loc[rows, "keep"] = False
+    curation.loc[rows, "dropped_by"] = "high_ignore_rate"
+    curation.loc[rows, "drop_reason"] = (
+        curation.loc[rows, "ses_idx"].map(rates).round(3).astype(str)
+    )
+    return curation, df_sess[~high]
 
 
 def apply_curation_df_fip(df_fip, curation):

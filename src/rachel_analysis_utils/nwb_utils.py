@@ -507,7 +507,18 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
             df_trials = df_trials[df_trials['ses_idx'].isin(kept_sessions)]
 
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
+
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
+
+    # poor fits only spoil RPE / Q-value analyses, so remove the fit, not the session.
+    # Runs before enrich_fip_in_df_trials so the fiber trial table inherits it
+    if curation is not None:
+        enrich_cols = df_trials_enriched.columns.difference(df_trials_fm.columns)
+        curation, df_sess_fm, df_trials_enriched = data_curation_helpers.curate_poor_model_fits(
+            curation, df_sess_fm, df_trials_enriched, enrich_cols)
+    else:
+        df_sess_fm[data_curation_helpers.POOR_FIT_COLUMN] = False  # no curation: every fit counts
+
     if len(df_fip):
         [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
         (df_fip_final, df_trials_final, df_trials_fip) = enrich_dfs.remove_tonic_df_fip(df_fip_all, df_trials_enriched, df_trials_fip_enriched)

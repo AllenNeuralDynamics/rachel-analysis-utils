@@ -23,6 +23,10 @@ DELAY_DROPPED_BY = "delay_pvalue_curation"
 DELAY_DROP_REASON = "square_pulse"
 # sessions where the animal ignored more than this fraction of trials are too disengaged
 IGNORE_RATE_THRESH = 0.40
+# sessions whose fitted Q-values spread less than this give RPEs too flat to use;
+# they are flagged (not dropped) so RPE plots can skip them
+MIN_QVALUE_SPREAD = 0.45
+POOR_FIT_COLUMN = "poor_model_fit"
 
 
 def _to_ses_idx(session_id):
@@ -106,6 +110,52 @@ def drop_high_ignore_sessions(curation, df_sess, max_ignore_rate=IGNORE_RATE_THR
         curation.loc[rows, "ses_idx"].map(rates).round(3).astype(str)
     )
     return curation, df_sess[~high]
+
+
+def curate_poor_model_fits(curation, df_sess_fm, df_trials_enriched, enrich_cols,
+                           min_qvalue_spread=MIN_QVALUE_SPREAD):
+    """
+    Remove the model-derived trial columns of sessions whose foraging model fit is
+    poor: qvalue_spread below min_qvalue_spread, or no fit at all (NaN or missing).
+
+    The session itself is kept, so analyses that need no model (PSTHs, Bayer &
+    Glimcher) still use it, while RPE / Q-value binning and RPE slope fits skip it.
+
+    curation: the run's curation table. Its fiber keep decisions are not changed;
+        poor_model_fit and qvalue_spread are added per session (NaN for sessions that
+        were not loaded).
+    df_sess_fm: from get_foraging_model_info. poor_model_fit is added.
+    df_trials_enriched: from enrich_df_trials_fm.
+    enrich_cols: the columns enrich_df_trials_fm added (RPE_*, Q_chosen, P_*, K_*, ...).
+        These are set to NaN for poor-fit trials. The raw fit outputs from
+        get_foraging_model_info (Q_left/Q_right, L_prob/R_prob, kernels) are kept, so
+        running enrich_df_trials_fm on the saved df_trials recovers every column.
+
+    Returns (curation, df_sess_fm, df_trials_enriched).
+    """
+    df_sess_fm = df_sess_fm.copy()
+    # absent when no session had a fit, since get_foraging_model_info merges it in per fit
+    spread = df_sess_fm.get("qvalue_spread", pd.Series(np.nan, index=df_sess_fm.index))
+    # written as not-(>=) so a NaN spread (no fit) is flagged too
+    poor = ~(spread >= min_qvalue_spread)
+    df_sess_fm[POOR_FIT_COLUMN] = poor
+
+    curation = curation.copy()
+    curation[POOR_FIT_COLUMN] = curation["ses_idx"].map(dict(zip(df_sess_fm["ses_idx"], poor)))
+    curation["qvalue_spread"] = curation["ses_idx"].map(dict(zip(df_sess_fm["ses_idx"], spread)))
+
+    if not poor.any():
+        return curation, df_sess_fm, df_trials_enriched
+
+    poor_sessions = df_sess_fm.loc[poor, "ses_idx"]
+    print(f"Removing the model fit of {poor.sum()} session(s) (qvalue_spread < "
+                 f"{min_qvalue_spread}; NaN = no fit); sessions kept for non-RPE analyses: "
+                 f"{dict(zip(poor_sessions, spread[poor].round(3)))}")
+
+    df_trials_enriched = df_trials_enriched.copy()
+    rows = df_trials_enriched["ses_idx"].isin(poor_sessions)
+    df_trials_enriched.loc[rows, list(enrich_cols)] = np.nan
+    return curation, df_sess_fm, df_trials_enriched
 
 
 def apply_curation_df_fip(df_fip, curation):

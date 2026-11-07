@@ -170,19 +170,23 @@ class dummy_nwb:
 
         return obj
 
-def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
+def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None, df_qc=None):
     """
-    Save a list or list-of-lists of dummy_nwb objects.
+    Save a list or list-of-lists of dummy_nwb objects, plus the run's tables.
 
     Folder structure:
         plot_loc/
+            df_sess_<subjects>.csv      (optional)
+            df_curation_<subjects>.csv  (optional)
+            df_qc_<subjects>.csv        (optional)
             <subject_id>/
-                df_sess.parquet (optional)
                 <session_id>/
                     <attr>.parquet
+
+    flat_dummy_nwbs may be empty (e.g. curation dropped every session): the tables are
+    still saved, named by the subjects in df_sess or, failing that, df_curation.
     """
-
-
+    Path(plot_loc).mkdir(parents=True, exist_ok=True)
     subject_ids = set()
 
     for nwb in flat_dummy_nwbs:
@@ -197,6 +201,12 @@ def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
         print(f'now saving {nwb.session_id}')
         nwb.save(subject_folder)
 
+    if not subject_ids:
+        # nothing loaded (curation dropped everything): name by the tables instead
+        if df_sess is not None and len(df_sess):
+            subject_ids = set(df_sess["subject_id"].astype(str))
+        elif df_curation is not None and len(df_curation):
+            subject_ids = set(df_curation["subject"].astype(str))
     subject_ids_sorted = sorted(subject_ids)
     suffix = "_".join(subject_ids_sorted)
 
@@ -210,6 +220,12 @@ def save_nwb_list(flat_dummy_nwbs, plot_loc, df_curation, df_sess=None,):
         print(f"now saving df_curation")
         df_curation.to_csv(
             Path(plot_loc) / f"df_curation_{suffix}.csv",
+            index=False,
+        )
+    if df_qc is not None:
+        print(f"now saving df_qc")
+        df_qc.to_csv(
+            Path(plot_loc) / f"df_qc_{suffix}.csv",
             index=False,
         )
 
@@ -476,6 +492,10 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
         curation = data_curation_helpers.drop_unchosen_recordings(curation, df_sess)
         # df_sess already carries ignore_rate, so disengaged sessions go before any trials load
         curation, df_sess = data_curation_helpers.drop_high_ignore_sessions(curation, df_sess)
+        if df_sess.empty:
+            # nothing left to load; hand the curation back so the caller can still save it
+            print("Every session was dropped by curation (high ignore rate); no NWB data loaded.")
+            return (df_sess, pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), curation)
 
     # sort sessions
     df_sess = (df_sess.sort_values(by=['session_date']) 
@@ -491,14 +511,12 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
     if len(df_fip):
         df_fip = split_fiber(df_fip, parameters['preprocessing'])
         if curation is not None:
-            logger.info("Curation provided: the intended measurements in parameters['channels'] "
-                        "are ignored in favor of the CSV's targets.")
+            if not parameters.get("qc_curation", False):
+                logger.info("Curation provided: the intended measurements in parameters['channels'] "
+                            "are ignored in favor of the CSV's targets.")
 
             df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
-            # test only the fibers that passed the fiber metrics, then re-apply so the
-            # square-pulse fibers it marks keep=False are removed as well
-            curation = data_curation_helpers.add_delay_pvalue(curation, df_fip, df_events, df_sess)
-            df_fip = data_curation_helpers.apply_curation_df_fip(df_fip, curation)
+
 
             # sessions left with no fibers would otherwise linger in df_sess while
             # get_dummy_nwbs skips them, so drop them here to keep the two in step
@@ -534,6 +552,6 @@ def get_nwb_processed(file_locations, curation=None, **parameters) -> None:
 
     # add week intervals
     df_sess_fm, df_trials_final, df_events, df_fip_final = enrich_nwb_by_week(df_sess_fm, df_trials_final, df_events, df_fip_final)
-    # return all dataframes, plus curation narrowed to the loaded recordings and
-    # carrying p_value_delay (None when no curation was given)
+    # return all dataframes, plus curation narrowed to the loaded recordings
+    # (None when no curation was given)
     return (df_sess_fm, df_trials_final, df_events, df_fip_final, curation)

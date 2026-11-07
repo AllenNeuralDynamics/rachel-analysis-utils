@@ -5,9 +5,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.stats import wilcoxon
 from aind_bwnm_fiber_data_curation_utils import data as _curation_data
-from aind_dynamic_foraging_data_utils import nwb_utils
+from aind_bwnm_fiber_data_curation_utils import generate_curation_results
 
 # the data/ subpackage ships an __init__.py, so this follows the install location
 CURATION_DATA_DIR = Path(_curation_data.__file__).parent
@@ -18,9 +17,7 @@ CURATABLE_PATCH_CORD = r"(G|R)_\d+"
 NO_FIBER = "no_fiber"
 # a fiber whose signal steps at a fixed delay before the go cue is carrying a square
 # pulse artifact rather than a neural signal
-PVALUE_DELAY_THRESH = 1e-10
-DELAY_DROPPED_BY = "delay_pvalue_curation"
-DELAY_DROP_REASON = "square_pulse"
+PVALUE_DELAY_THRESH = 1e-7
 # sessions where the animal ignored more than this fraction of trials are too disengaged
 IGNORE_RATE_THRESH = 0.40
 # sessions whose fitted Q-values spread less than this give RPEs too flat to use;
@@ -42,26 +39,53 @@ def _to_nwb_suffix(session_id):
     return int(str(session_id).rsplit("_", 1)[-1].replace("-", ""))
 
 
+def prepare_curation(curation):
+    """
+    Key a curation table for the analysis, whatever its source (a results CSV or
+    a table built in code): add ses_idx and nwb_suffix, and make keep a bool.
+
+    Sessions recorded twice in a day share a ses_idx, so rows stay keyed by
+    nwb_suffix too; get_nwb_processed narrows them to the recording it loaded.
+
+    Returns a copy; the input's own columns are left unchanged so the table can be
+    saved back out.
+    """
+    curation = curation.copy()
+    curation["ses_idx"] = curation["session_id"].map(_to_ses_idx)
+    curation["nwb_suffix"] = curation["session_id"].map(_to_nwb_suffix)
+    curation["keep"] = curation["keep"].astype(bool)
+    return curation
+
+
 def load_curation(csv_path):
     """
-    Read a fiber curation results CSV, keyed to ses_idx.
+    Read a fiber curation results CSV and prepare it (see prepare_curation).
 
     csv_path: path under CURATION_DATA_DIR, without the .csv extension, e.g.
         'bilateral_4_channels/curation_results/bilateral_4_channels_results'
         (the _G variant covers only G fibers)
-
-    Returns the CSV's own columns, unchanged so the table can be saved back out, plus
-    ses_idx, nwb_suffix, and p_value_delay (NaN until add_delay_pvalue fills it).
-
-    Sessions recorded twice in a day share a ses_idx, so rows stay keyed by
-    nwb_suffix too; get_nwb_processed narrows them to the recording it loaded.
     """
-    curation = pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv"))
-    curation["ses_idx"] = curation["session_id"].map(_to_ses_idx)
-    curation["nwb_suffix"] = curation["session_id"].map(_to_nwb_suffix)
-    curation["keep"] = curation["keep"].astype(bool)
-    curation["p_value_delay"] = np.nan
-    return curation
+    return prepare_curation(pd.read_csv((CURATION_DATA_DIR / csv_path).with_suffix(".csv")))
+
+
+def make_default_curation(session_ids, channels):
+    """
+    All-pass curation for QC without a curation CSV: one row per session and channel
+    in `channels`, every fiber kept, target taken from the channels dict. Same
+    decision columns and keys load_curation gives, so the rest of the pipeline cannot
+    tell the two apart.
+
+    session_ids: e.g. 'behavior_808054_2025-09-02_10-38-37'
+    channels: parameters['channels'], patch cord -> intended measurement
+    """
+    # decision columns from curation-utils; dropped_by / drop_reason start NaN
+    curation = pd.DataFrame(
+        [{"subject": session_id.split("_")[1], "session_id": session_id, "fiber": fiber,
+          "target": target, "keep": True}
+         for session_id in session_ids for fiber, target in channels.items()],
+        columns=generate_curation_results.CURATION_COLUMNS,
+    )
+    return prepare_curation(curation)
 
 
 def drop_unchosen_recordings(curation, df_sess):
@@ -99,7 +123,7 @@ def drop_high_ignore_sessions(curation, df_sess, max_ignore_rate=IGNORE_RATE_THR
         return curation, df_sess
 
     rates = df_sess.loc[high].set_index("ses_idx")["ignore_rate"]
-    logging.info(f"Dropping {len(rates)} session(s) with ignore_rate > {max_ignore_rate}: "
+    print(f"Dropping {len(rates)} session(s) with ignore_rate > {max_ignore_rate}: "
                  f"{rates.round(3).to_dict()}")
 
     curation = curation.astype({"dropped_by": object, "drop_reason": object})
@@ -201,82 +225,52 @@ def apply_curation_df_fip(df_fip, curation):
     return out.reset_index(drop=True)
 
 
-def compute_p_values_delay(nwbfile, GoCueTime, patch_cords, pre=40, post=80, delay=0.5):
+def add_square_pulse_pvalue(curation, square_pulse_pval, pvalue_thresh=PVALUE_DELAY_THRESH):
     """
-    Wilcoxon p-value per patch cord ('G_0', 'R_2', ...) for a step in the signal
-    `delay` s before the go cue.
+    Add square_pulse_pvalue per fiber, and drop (keep=False, with dropped_by/drop_reason
+    recorded) kept fibers below pvalue_thresh: a step in the signal at a fixed delay
+    before the go cue is a square pulse artifact, not a neural signal.
 
-    Assumes 20 Hz sampling, so pre/post are in frames. GoCueTime must be on the nwb's
-    own clock (df_events 'raw_timestamps'). Returns a Series indexed by patch cord; one
-    that cannot be computed is NaN.
-    """
-    p_values_delay = pd.Series(np.nan, index=list(patch_cords), dtype=float)
-    delay_in_frames = int(np.round(delay * 20))
-    for patch_cord in p_values_delay.index:
-        try:
-            ts = nwbfile.acquisition[patch_cord].timestamps[:]
-            data = nwbfile.acquisition[patch_cord].data[:]
-            inds = [
-                np.argmin(np.abs(ts - go))
-                for go in GoCueTime
-                if ts[pre] <= go <= ts[-post]
-            ]
-            if not inds:
-                raise Exception("No GoCue occurs within timestamps")
-            snippets = np.array(
-                [data[i - pre : i + post] for i in inds if i <= len(data) - post]
-            )
-            snippets -= snippets[:, pre - 10 : pre].mean(1)[:, None]
-            snippets -= snippets[
-                :, pre - delay_in_frames - 10 : pre - delay_in_frames
-            ].mean(1)[:, None]
-            p_values_delay[patch_cord] = wilcoxon(
-                snippets[:, pre - delay_in_frames : pre - delay_in_frames + 10].mean(1)
-            ).pvalue
-        except Exception as e:
-            logging.error(f"Error computing delay p-value for {patch_cord}: {e}")
-    return p_values_delay
+    square_pulse_pval: qc_curation_helpers.expand_qc_metric(df, "Significant response
+        Delay before Go Cue") -- one row per session (ses_idx, nwb_suffix, status), one
+        column per fiber (G_0, R_2, Iso_3, ...). Iso columns are ignored: not curatable.
+        Rows match the curation on ses_idx and nwb_suffix.
 
+    Also adds square_pulse_qc_missing: True for sessions whose QC has no such metric
+    (status 'missing', e.g. assets processed before the pipeline added it), so the
+    check never ran for them; those sessions are printed. NaN for curation rows of
+    sessions not in square_pulse_pval (not dispatched in this run).
 
-def add_delay_pvalue(curation, df_fip, df_events, df_sess, pvalue_thresh=PVALUE_DELAY_THRESH):
-    """
-    Fill p_value_delay for every curatable fiber left in df_fip, and drop (keep=False,
-    with dropped_by/drop_reason recorded) those below pvalue_thresh as square pulses.
-
-    Run on df_fip AFTER apply_curation_df_fip, so only fibers that passed the fiber
-    metrics are tested and the nwbs reloaded here are limited to those sessions;
-    re-apply apply_curation_df_fip afterwards to remove the new drops. A NaN p-value
-    leaves the fiber kept.
-
-    Go cues come from df_events' raw_timestamps, which share the nwb's own clock;
-    the 'timestamps' column is shifted so the first go cue is t=0.
+    A fiber the CSV already dropped keeps its original reason. A missing p-value is
+    NaN and leaves the fiber kept.
 
     Returns a copy; curation itself is not modified.
     """
+    sessions = square_pulse_pval.assign(nwb_suffix=square_pulse_pval["nwb_suffix"].astype(int))
+    fiber_cols = [c for c in sessions.columns if pd.Series([c]).str.fullmatch(CURATABLE_PATCH_CORD).iloc[0]]
+    # one row per (session, fiber)
+    pvals = sessions.melt(id_vars=["ses_idx", "nwb_suffix"], value_vars=fiber_cols,
+                          var_name="fiber", value_name="square_pulse_pvalue")
+    missing = sessions.assign(square_pulse_qc_missing=sessions["status"].eq("missing"))[
+        ["ses_idx", "nwb_suffix", "square_pulse_qc_missing"]]
+
     # dropped_by/drop_reason read in as all-NaN floats when nothing was dropped
     curation = curation.astype({"dropped_by": object, "drop_reason": object})
-    fibers = df_fip.loc[
-        df_fip["patch_cord"].str.fullmatch(CURATABLE_PATCH_CORD, na=False),
-        ["ses_idx", "patch_cord"],
-    ].drop_duplicates()
+    curation = curation.drop(columns=["square_pulse_pvalue", "square_pulse_qc_missing"], errors="ignore")
+    curation = (curation.merge(pvals, on=["ses_idx", "nwb_suffix", "fiber"], how="left")
+                        .merge(missing, on=["ses_idx", "nwb_suffix"], how="left"))
 
-    for ses_idx, ses_fibers in fibers.groupby("ses_idx"):
-        sess = df_sess[df_sess["ses_idx"] == ses_idx].iloc[0]
-        nwb = nwb_utils.load_nwb_from_filename(sess["s3_location"])
-        ses_events = df_events[df_events["ses_idx"] == ses_idx]
-        go_cue = ses_events.query("event == 'goCue_start_time'")["raw_timestamps"].values
+    no_qc = sessions.loc[sessions["status"].eq("missing"), "ses_idx"].tolist()
+    if no_qc:
+        print(f"No 'Significant response Delay before Go Cue' QC for {len(no_qc)} of "
+              f"{len(sessions)} session(s); square pulse check skipped for: {no_qc}")
 
-        p_values = compute_p_values_delay(nwb, go_cue, ses_fibers["patch_cord"])
-        # match nwb_suffix too, in case curation still holds the day's other recording
-        rows = (
-            (curation["ses_idx"] == ses_idx)
-            & (curation["nwb_suffix"] == int(sess["nwb_suffix"]))
-            & curation["fiber"].isin(p_values.index)
-        )
-        curation.loc[rows, "p_value_delay"] = curation.loc[rows, "fiber"].map(p_values)
-
-    square_pulse = curation["p_value_delay"] < pvalue_thresh
+    square_pulse = curation["keep"] & (curation["square_pulse_pvalue"] < pvalue_thresh)
+    if square_pulse.any():
+        print(f"Dropping {square_pulse.sum()} fiber(s) as square pulses "
+              f"(square_pulse_pvalue < {pvalue_thresh}): "
+              f"{list(zip(curation.loc[square_pulse, 'session_id'], curation.loc[square_pulse, 'fiber']))}")
     curation.loc[square_pulse, "keep"] = False
-    curation.loc[square_pulse, "dropped_by"] = DELAY_DROPPED_BY
-    curation.loc[square_pulse, "drop_reason"] = DELAY_DROP_REASON
+    curation.loc[square_pulse, "dropped_by"] = "fiber_qc"
+    curation.loc[square_pulse, "drop_reason"] = "square_pulse_pvalue"
     return curation

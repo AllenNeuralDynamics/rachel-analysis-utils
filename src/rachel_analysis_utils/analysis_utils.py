@@ -164,7 +164,7 @@ def regression_choice_time_vs_reward(df,  y_col, reward_col='earned_reward',max_
                             for lag in range(0, max_lag + 1)}, index=df.index)
     y = df[y_col]
     data = pd.concat([y, lagged], axis=1).dropna()
-    X = data[lagged.columns]
+    X = sm.add_constant(data[lagged.columns], has_constant='add')
     model = sm.OLS(data[y_col], X).fit()
 
     # summary table for full model

@@ -204,7 +204,17 @@ def apply_curation_df_fip(df_fip, curation):
     lookup = lookup.set_index(["ses_idx", "fiber"])
     keys = pd.MultiIndex.from_arrays([df_fip["ses_idx"], patch_cord.where(curatable)])
 
-    absent = curatable & ~pd.Series(keys.isin(lookup.index), index=df_fip.index)
+    # a curatable fiber whose data is entirely NaN carries no signal: drop it, and don't
+    # require a curation row for it
+    all_nan = (
+        df_fip["data"].isna().groupby([df_fip["ses_idx"], patch_cord]).transform("all")
+    )
+    empty = curatable & all_nan
+    if empty.any():
+        pairs = sorted(set(zip(df_fip.loc[empty, "ses_idx"], patch_cord[empty])))
+        print(f"Dropping {len(pairs)} curatable fiber(s) whose data is all NaN: {pairs}")
+
+    absent = curatable & ~empty & ~pd.Series(keys.isin(lookup.index), index=df_fip.index)
     if absent.any():
         pairs = sorted(set(zip(df_fip.loc[absent, "ses_idx"], patch_cord[absent])))
         raise ValueError(
@@ -218,7 +228,7 @@ def apply_curation_df_fip(df_fip, curation):
     target = target.where(target != NO_FIBER)
     keep = pd.Series(lookup["keep"].reindex(keys).to_numpy(), index=df_fip.index).eq(True)
 
-    selected = ~curatable | (keep & target.notna())
+    selected = ~empty & (~curatable | (keep & target.notna()))
 
     out = df_fip.loc[selected].copy()
     out["event"] = target[selected].fillna(patch_cord[selected])

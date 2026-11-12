@@ -23,7 +23,9 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
         slope = np.nan
     return (x_fit, y_fit, slope)
 
-output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel.split('_dff')[0]}_{alignment_event.split('_in_')[0]}"
+output_col_name = lambda channel, data_column, alignment_event, offsets: (
+    f"avg_{data_column}_{channel.split('_dff')[0]}_{offsets[0]}_{offsets[1]}_{alignment_event.split('_time_in_')[0]}"
+)
 
 def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'data_z_norm', 
                             alignment_event = 'choice_time_in_session',offsets = [0.33,1]):
@@ -37,7 +39,7 @@ def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'd
     for nwb_week in nwbs_by_week:
         nwb_week_enriched = copy.deepcopy(nwb_week)
         for channel in all_channels:
-            avg_signal_col = output_col_name(channel, data_column, alignment_event)
+            avg_signal_col = output_col_name(channel, data_column, alignment_event, offsets)
 
             nwb_week_enriched = trial_metrics.get_average_signal_window_multi(
                 nwb_week_enriched,
@@ -56,7 +58,7 @@ def add_AUC_and_rpe_slope(nwbs_by_week, all_channels, save_dfs, data_column = 'd
 
     for channel in all_channels:
 
-        avg_signal_col = output_col_name(channel, data_column, alignment_event)
+        avg_signal_col = output_col_name(channel, data_column, alignment_event, offsets)
         if avg_signal_col not in df_trials_all.columns:
             continue
         

@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import json
+import pyarrow.parquet as pq
 
 from aind_dynamic_foraging_data_utils import nwb_utils, enrich_dfs
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
@@ -84,6 +85,28 @@ def split_nwb_by_time(nwb):
     nwb_split_late.df_trials = nwb.df_trials.query(f'trial >= {mid_point}')
 
     return (nwb_split_early, nwb_split_late)
+
+# Memory-compact dtypes applied when df_fip is loaded (~86% smaller than object/float64).
+# ses_idx is left as plain strings on purpose (it is used for equality/split downstream).
+FIP_CATEGORY_COLS = ["event", "patch_cord", "preprocessing", "ses_idx"]
+FIP_FLOAT32_COLS = ["data", "data_z", "data_norm", "data_z_norm"]
+
+
+def _read_df_fip_compact(path):
+    """Read a df_fip parquet with string columns as category and signals as float32.
+
+    Strings are read straight into dictionary form (no transient object-dtype copy).
+    timestamps / raw_timestamps stay float64 on purpose. Columns missing from the file
+    are skipped.
+    """
+
+    cols = set(pq.ParquetFile(path).schema_arrow.names)
+    cat_cols = [c for c in FIP_CATEGORY_COLS if c in cols]
+    df = pq.read_table(path, read_dictionary=cat_cols).to_pandas()
+    f32 = [c for c in FIP_FLOAT32_COLS if c in df.columns]
+    df[f32] = df[f32].astype("float32")
+    return df
+
 
 class dummy_nwb:
     def __init__(self, df_trials, df_events, df_fip, ses_idx = None, df_licks = None, grouped = False) -> None:
@@ -164,7 +187,10 @@ class dummy_nwb:
         obj.nwb_file_loc = None
 
         for file in session_folder.glob("*.parquet"):
-            if "df_fip" in file.name and load_fip == False:
+            if "df_fip" in file.name:
+                if load_fip == False:
+                    continue
+                setattr(obj, file.stem, _read_df_fip_compact(file))
                 continue
             setattr(obj, file.stem, pd.read_parquet(file, engine="fastparquet"))
 

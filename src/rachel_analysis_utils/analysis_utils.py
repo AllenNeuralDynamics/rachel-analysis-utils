@@ -138,8 +138,17 @@ def enrich_df_trials(df_trials):
     ##### PART IV: GETTING STAY/LEAVE #######
     
     _choice_shifted = df_trials.groupby('ses_idx')['animal_response'].shift(1)
-    df_trials['stay'] = df_trials['animal_response'] == _choice_shifted
-    df_trials['switch'] = df_trials['animal_response'] != _choice_shifted
+    df_trials['stay'] = (df_trials['animal_response'] == _choice_shifted).astype('boolean').mask(_choice_shifted.isna())
+
+    # stay_noignore: compare to the most recent previous trial that was NOT an ignore
+    # (animal_response == 2.0), walking back through consecutive ignores within a session.
+    # Left as NA (nullable boolean) for ignore trials and for trials with no earlier
+    # valid choice, since stay/switch is undefined there. ~stay_noignore keeps those NA.
+    _resp = df_trials['animal_response']
+    _valid_resp = _resp.where(_resp != 2.0)
+    _prev_valid_choice = _valid_resp.groupby(df_trials['ses_idx']).transform(lambda s: s.ffill().shift(1))
+    _stay_noignore = (_resp == _prev_valid_choice).astype('boolean')
+    df_trials['stay_skipignore'] = _stay_noignore.mask(_resp.eq(2.0) | _prev_valid_choice.isna())
     df_trials['response_time'] = df_trials['choice_time_in_trial'] -  df_trials['goCue_start_time_in_trial']
 
 
